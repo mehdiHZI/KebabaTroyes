@@ -1,0 +1,30 @@
+---
+description: Repos GitHub sources à réutiliser pour Kebaba Troyes
+alwaysApply: true
+---
+
+# Repos sources (ne pas repartir de zéro)
+
+Compte GitHub : `mehdiHZI`. Ces projets existent déjà ; ils sont **incomplets ou non adaptés** à Kebaba — on s’en sert comme base.
+
+## Mapping module → repo
+
+| Module Kebaba | Repo(s) de référence | Notes |
+|---------------|----------------------|-------|
+| Caisse | `LogicielCaisseMilanoGusto` | Caisse non certifiée (MilanoGusto) → à faire évoluer vers **auto-certification** + conformité FR |
+| Food cost | `FoodCostKebaba`, `FoodcoastParis` | Préférer `FoodCostKebaba` ; Paris en référence secondaire |
+| RH | `RHKebaba`, `LogicielRHV2`, `LogicielRHV1` | Préférer `RHKebaba` / V2 ; V1 = historique |
+| Téléphone IA | `serveurIA` | Agent / serveur IA commandes |
+| Réception commandes | `AppliReceptionCommandeKebaba` | Côté cuisine / réception |
+| Borne / commande client | (à confirmer) `Libanais` | Prise de commande terrasse — piste pour la borne |
+| Click & collect / livraison | (à confirmer) `Libanais`, `AppliReceptionCommandeKebaba` | Pistes UX commande + réception cuisine ; pas de repo dédié livraison identifié |
+| Stock | *pas de repo dédié identifié* | À créer ou extraire depuis food cost / caisse |
+
+URLs : `https://github.com/mehdiHZI/<nom-du-repo>`
+
+## Règles de reprise
+
+- **Lire / cloner / analyser** le repo source avant d’écrire une nouvelle app équivalente.
+- Documenter dans le code ou un changelog court : *ce qui est repris*, *ce qui change pour Kebaba*.
+- Ne pas mélanger les marques (MilanoGusto, Paris, etc.) dans l’UI ou les données Kebaba.
+- Si un repo est intégré ici (submodule, copie, monorepo) : garder la traçabilité du dépôt d’origine.

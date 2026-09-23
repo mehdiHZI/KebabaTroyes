@@ -1,0 +1,33 @@
+---
+description: Architecture VPS et communication entre logiciels Kebaba
+alwaysApply: true
+---
+
+# Architecture VPS & interop
+
+Tout est hébergé sur le **VPS OVH** (voir règle `serveur-ovh` : VPS-3, Gravelines, Ubuntu 24.04) pour que caisse, borne, click & collect / livraison, IA téléphone, food cost, stock et RH puissent **échanger** des infos.
+
+## Principes d’intégration
+
+- Chaque module expose des **API stables** (REST ou équivalent déjà en place dans le repo source).
+- Les données partagées critiques : **commandes**, **articles / recettes**, **mouvements de stock**, **encaissements**, **employés / plannings**.
+- Éviter que deux apps écrivent la même vérité sans contrat (une source de vérité par domaine).
+- Auth et secrets uniquement via variables d’environnement / config VPS — jamais commités.
+- Prévoir que les apps tournent en **services séparés** (conteneurs ou process) sur le même VPS, joignables en réseau privé.
+
+## Domaines (orientation)
+
+| Domaine | App propriétaire probable | Consommateurs typiques |
+|---------|---------------------------|------------------------|
+| Commandes | Borne / Click & collect–livraison / IA / Caisse | Cuisine, stock, food cost |
+| Click & collect / livraison | App commande en ligne | Caisse, cuisine, stock, paiements |
+| Encaissement | Caisse (+ paiements en ligne si applicable) | Reporting, food cost |
+| Stock | Module stock | Food cost, caisse, commandes |
+| RH | RH | Planning ops (pas de mélange avec la caisse) |
+| Food cost | Food cost | Lecture recettes / coûts / pertes |
+
+## Ce que l’agent doit éviter
+
+- Dupliquer une base “commandes” dans chaque app sans sync.
+- Hardcoder des IPs / mots de passe VPS dans le code.
+- Coupler l’UI d’un module au schéma interne d’un autre sans couche API.

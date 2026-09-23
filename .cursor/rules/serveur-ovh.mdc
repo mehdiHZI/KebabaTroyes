@@ -1,0 +1,39 @@
+---
+description: Infos du serveur VPS OVH Kebaba Troyes
+alwaysApply: true
+---
+
+# Serveur de production — OVH VPS
+
+## Fiche technique
+
+| Élément | Valeur |
+|---------|--------|
+| Fournisseur | **OVHcloud** |
+| Offre | **VPS-3 2027** |
+| CPU | 6 vCores |
+| RAM | 12 Go |
+| Disque | 100 Go SSD NVMe |
+| Bande passante | 2 Gbit/s illimitée |
+| Localisation | **France — Gravelines** |
+| OS | **Ubuntu 24.04 LTS** |
+| Engagement | 12 mois (~10,40 € HT/mois) |
+| Backup | Backup automatique standard OVH (inclus) |
+
+## Rôle du serveur
+
+Héberge **tous** les logiciels Kebaba (caisse, borne, click & collect / livraison, IA téléphone, food cost, stock, RH) pour qu’ils communiquent entre eux.
+
+## Contraintes pour l’agent
+
+- Dimensionner Docker / services pour **12 Go RAM** (ne pas sur-allouer).
+- Préférer conteneurs légers ; BDD partagée ou peu de instances Postgres.
+- IA lourde (STT/TTS/LLM) en **APIs externes** quand possible — pas de modèles locaux gourmands sans décision explicite.
+- Ne jamais committer IP, mots de passe, clés SSH ou secrets OVH.
+- Quand l’IP / accès SSH seront connus : les noter ici (hors secrets) ou en variables d’env documentées, pas en dur dans le code.
+- OS cible des scripts / Docker : **Ubuntu 24.04**.
+
+## IP & accès
+
+- IP publique : *à renseigner après livraison OVH*
+- Accès : SSH (clé préférée) — *à configurer*

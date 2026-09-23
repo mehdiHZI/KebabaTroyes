@@ -1,0 +1,35 @@
+---
+description: Contexte global du projet logiciel Kebaba Troyes
+alwaysApply: true
+---
+
+# Kebaba Troyes — Contexte projet
+
+Restaurant kebab à Troyes. Ce monorepo / espace de travail couvre **toute la stack logicielle** du restaurant, hébergée sur un **VPS OVH VPS-3** (France Gravelines, Ubuntu 24.04 — détail dans `serveur-ovh`) pour que les apps puissent communiquer entre elles.
+
+## Modules à livrer
+
+| Module | Rôle | Priorité d’approche |
+|--------|------|---------------------|
+| **Caisse** | Encaissement ; **auto-certification** et conformité loi française (logiciel de caisse) | Adapter l’existant, ne pas repartir de zéro |
+| **Borne** | Prise de commande client en self-service | À développer / adapter |
+| **Click & collect / livraison** | Commandes en ligne (retrait magasin + livraison) | À développer / adapter |
+| **Agent IA téléphone** | Prend les commandes téléphoniques à la place d’un vendeur | Adapter l’existant |
+| **Food cost** | Calcul / suivi des coûts alimentaires | Adapter l’existant |
+| **Stock** | Gestion des stocks | À développer / brancher aux autres apps |
+| **RH** | Planning, pointage, heures, etc. | Adapter l’existant |
+
+## Principes
+
+- **Réutiliser** les repos GitHub déjà existants (même incomplets) plutôt que tout réécrire.
+- **Adapter** à Kebaba Troyes (marque, process, menu, flux) au lieu de cloner un autre resto tel quel.
+- Tout doit pouvoir **échanger des données** via le VPS (commandes multi-canaux, stock, caisse, RH, food cost).
+- Les canaux de commande (borne, téléphone IA, click & collect / livraison, caisse) convergent vers le **même flux commandes** (cuisine / réception).
+- Préférer des APIs / contrats clairs entre modules plutôt que du couplage fort.
+- Français pour l’UI métier et la doc projet ; code et noms techniques en anglais sauf convention déjà établie dans un repo repris.
+
+## Ce que l’agent doit faire
+
+- Avant de créer un module from scratch, **vérifier s’il existe déjà** dans les repos sources listés (règle `repos-existants`).
+- Quand on touche à la caisse : respecter la règle `caisse-conformite`.
+- Quand on conçoit un flux cross-apps : respecter la règle `architecture-vps`.

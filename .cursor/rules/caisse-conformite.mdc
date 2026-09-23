@@ -1,0 +1,29 @@
+---
+description: Conformité légale et auto-certification du logiciel de caisse (France)
+globs: "**/caisse/**/*,**/pos/**/*,**/cash*/**/*"
+alwaysApply: false
+---
+
+# Caisse — conformité France & auto-certification
+
+La caisse Kebaba doit être **certifiable par nous-mêmes** (auto-certification) et respecter la **loi française** sur les logiciels de caisse (lutte contre la fraude à la TVA).
+
+## Exigences à respecter (orientation produit)
+
+- **Inaltérabilité** des données d’enregistrement (tickets, encaissements) : pas de suppression silencieuse ; corrections traçables (avoir, annulation journalisée).
+- **Sécurisation** : accès contrôlés, pas de backdoor de modification des totaux.
+- **Conservation** des données sur la durée légale applicable.
+- **Clôture / archivage** : journaux de période exploitables (Z de caisse, exports).
+- **Traçabilité** : qui a fait quoi (utilisateur, horodatage) sur les opérations sensibles.
+- Documentation d’**auto-certification** : attestation / dossier prouvant la conformité des fonctions ci-dessus.
+
+## Base de travail
+
+- Partir de `LogicielCaisseMilanoGusto` (non certifié) et **combler les écarts** plutôt que réécrire.
+- Toute feature caisse qui touche totaux, tickets, remises, annulations ou exports doit être pensée **audit-first**.
+
+## Ce que l’agent doit faire
+
+- Signaler si une demande utilisateur **casse** l’inaltérabilité ou la traçabilité.
+- Ne pas proposer de “mode debug” qui réécrit l’historique de caisse en production.
+- Séparer clairement **environnement test** et **données de production certifiées**.
