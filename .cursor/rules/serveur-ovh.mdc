@@ -29,11 +29,16 @@ Héberge **tous** les logiciels Kebaba (caisse, borne, click & collect / livrais
 - Dimensionner Docker / services pour **12 Go RAM** (ne pas sur-allouer).
 - Préférer conteneurs légers ; BDD partagée ou peu de instances Postgres.
 - IA lourde (STT/TTS/LLM) en **APIs externes** quand possible — pas de modèles locaux gourmands sans décision explicite.
-- Ne jamais committer IP, mots de passe, clés SSH ou secrets OVH.
-- Quand l’IP / accès SSH seront connus : les noter ici (hors secrets) ou en variables d’env documentées, pas en dur dans le code.
+- Ne jamais committer mots de passe, clés SSH, secrets OVH / Let’s Encrypt / CrowdSec.
+- Les IP publiques / Tailscale ci-dessous sont OK dans les règles Cursor (ops) — **pas** en dur dans le code applicatif.
 - OS cible des scripts / Docker : **Ubuntu 24.04**.
+- Stack sécurité & déploiement conteneurs : voir règle `vps-securite`.
 
 ## IP & accès
 
-- IP publique : *à renseigner après livraison OVH*
-- Accès : SSH (clé préférée) — *à configurer*
+- IP publique : `141.94.246.122` (apps web via Traefik : **80/443** — SSH public **fermé**)
+- Tailscale : `100.124.24.79` (hostname mesh : `vps-1846b31e`) — **seul accès SSH admin**
+- Accès admin : `ssh ubuntu@100.124.24.79` (clé `mehdi@Mehdi`, Tailscale requis)
+- Hostname : `vps-1846b31e`
+- Filet de secours : console KVM OVH si Tailscale HS
+- Backup appli : Duplicati sur Tailscale `http://100.124.24.79:8200` (+ backup OVH inclus)

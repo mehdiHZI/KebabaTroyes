@@ -13,7 +13,8 @@ Tout est hébergé sur le **VPS OVH** (voir règle `serveur-ovh` : VPS-3, Gravel
 - Les données partagées critiques : **commandes**, **articles / recettes**, **mouvements de stock**, **encaissements**, **employés / plannings**.
 - Éviter que deux apps écrivent la même vérité sans contrat (une source de vérité par domaine).
 - Auth et secrets uniquement via variables d’environnement / config VPS — jamais commités.
-- Prévoir que les apps tournent en **services séparés** (conteneurs ou process) sur le même VPS, joignables en réseau privé.
+- Apps en **conteneurs séparés** sur le réseau Docker **`proxy-net`** ; exposition publique uniquement via **Traefik** (voir `vps-securite`).
+- Joignables entre elles en réseau privé Docker / Tailscale — pas d’exposition admin sur l’IP publique.
 
 ## Domaines (orientation)
 

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "secure-vps-setup": {
+      "source": "tibobfd/skills-secure-vps-for-beginners",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "21469e5d019267f15e9c33aaf47fde2755e759bbcd9b00d4a58bbb476e79f8a5"
+    }
+  }
+}

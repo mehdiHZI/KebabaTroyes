@@ -1,0 +1,46 @@
+---
+description: Stack sécurité VPS déjà en place — ne pas casser, déployer via Traefik
+alwaysApply: true
+---
+
+# Sécurité VPS — état en place (sept. 2026)
+
+Hardening fait selon le skill `.agents/skills/secure-vps-setup`. Ne pas rouvrir SSH public ni exposer les UIs admin sur Internet.
+
+## Couches actives
+
+| Couche | État | Notes |
+|--------|------|--------|
+| UFW | Actif | Default deny in ; autorise `tailscale0`, **80**, **443** |
+| SSH | Durci | Pas de root, pas de mot de passe, clés only ; X11 off |
+| Tailscale | Actif | Seul chemin admin : `100.124.24.79` |
+| Unattended-upgrades + sysctl | Actifs | |
+| Docker + réseau `proxy-net` | Actif | Apps → ce réseau |
+| Traefik v3 | Actif | Entrée HTTP/HTTPS publique ; `exposedbydefault=false` |
+| Watchtower | Actif | Image `nickfedor/watchtower` (Docker 29+) ; label `com.centurylinklabs.watchtower.enable=true` |
+| CrowdSec + bouncer iptables | Actif (host) | Collections linux/sshd/traefik/http-cve ; logs Traefik branchés |
+| Duplicati | Actif | UI **uniquement** sur Tailscale `:8200` |
+
+## Chemins sur le serveur
+
+Configs runtime (hors git) :
+
+- `~/app-data/traefik/` — compose, `letsencrypt/acme.json` (chmod **600**), logs
+- `~/app-data/watchtower/`
+- `~/app-data/duplicati/` — UI : `http://100.124.24.79:8200`
+- Vérif : `bash .agents/skills/secure-vps-setup/scripts/verify_setup.sh`
+
+## Déploiement d’une nouvelle app (obligatoire)
+
+1. Conteneur sur le réseau Docker **`proxy-net`** (externe).
+2. **Ne pas** publier de ports admin sur `0.0.0.0` (Docker contourne UFW).
+3. Exposer via labels Traefik uniquement (HTTPS + resolver `myresolver`), quand un domaine DNS pointe vers `141.94.246.122`.
+4. UIs sensibles (DB admin, backups, dashboards) : bind Tailscale ou localhost + tunnel SSH.
+5. Label Watchtower si MAJ auto souhaitée : `com.centurylinklabs.watchtower.enable=true`.
+
+## Ce que l’agent ne doit pas faire
+
+- `ufw allow 22` / rouvrir SSH sur l’IP publique.
+- Mapper `8200:8200`, dashboards Traefik, Postgres, etc. sur toutes les interfaces.
+- Committer `.env`, `acme.json`, clés API, webhooks Discord CrowdSec.
+- Remplacer Watchtower par `containrrr/watchtower` (incompatible Docker Engine 29+).
