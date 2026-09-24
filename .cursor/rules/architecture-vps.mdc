@@ -5,30 +5,47 @@ alwaysApply: true
 
 # Architecture VPS & interop
 
-Tout est hébergé sur le **VPS OVH** (voir règle `serveur-ovh` : VPS-3, Gravelines, Ubuntu 24.04) pour que caisse, borne, click & collect / livraison, IA téléphone, food cost, stock et RH puissent **échanger** des infos.
+Tout est hébergé sur le **VPS OVH** (voir règle `serveur-ovh` : VPS-3, Gravelines, Ubuntu 24.04) pour que caisse, borne, click & collect / livraison, IA téléphone, food cost, stock, **dashboard** et RH puissent **échanger** des infos.
 
 ## Principes d’intégration
 
 - Chaque module expose des **API stables** (REST ou équivalent déjà en place dans le repo source).
-- Les données partagées critiques : **commandes**, **articles / recettes**, **mouvements de stock**, **encaissements**, **employés / plannings**.
+- Les données partagées critiques : **commandes**, **articles / recettes**, **mouvements de stock**, **encaissements**, **employés / plannings**, **coûts / marge** (pour le dashboard).
 - Éviter que deux apps écrivent la même vérité sans contrat (une source de vérité par domaine).
 - Auth et secrets uniquement via variables d’environnement / config VPS — jamais commités.
 - Apps en **conteneurs séparés** sur le réseau Docker **`proxy-net`** ; exposition publique uniquement via **Traefik** (voir `vps-securite`).
 - Joignables entre elles en réseau privé Docker / Tailscale — pas d’exposition admin sur l’IP publique.
+- UIs admin (dashboard, stock, RH…) : Tailscale et/ou auth forte — jamais ouvertes anonymement sur Internet.
 
 ## Domaines (orientation)
 
 | Domaine | App propriétaire probable | Consommateurs typiques |
 |---------|---------------------------|------------------------|
-| Commandes | Borne / Click & collect–livraison / IA / Caisse | Cuisine, stock, food cost |
-| Click & collect / livraison | App commande en ligne | Caisse, cuisine, stock, paiements |
-| Encaissement | Caisse (+ paiements en ligne si applicable) | Reporting, food cost |
-| Stock | Module stock | Food cost, caisse, commandes |
-| RH | RH | Planning ops (pas de mélange avec la caisse) |
-| Food cost | Food cost | Lecture recettes / coûts / pertes |
+| Commandes | Borne / Click & collect–livraison / IA / Caisse | Cuisine, **stock**, food cost, **dashboard** |
+| Click & collect / livraison | App commande en ligne | Caisse, cuisine, stock, paiements, dashboard |
+| Encaissement | Caisse (+ paiements en ligne si applicable) | Reporting, food cost, **stock**, **dashboard** |
+| **Stock** | **Module stock** (source de vérité quantités) | Food cost, caisse (dispo), commandes (dispo), cuisine, dashboard |
+| Food cost | Food cost | Dashboard (marge / bénéfice), lecture recettes / coûts / pertes |
+| **Dashboard** | **Module dashboard** (agrégation lecture seule) | Direction / gérant (UI) |
+| RH | RH | Planning ops ; dashboard si charges de personnel |
+### Flux Stock (contrat)
+
+1. **Sortie auto — caisse** : ticket encaissé → mouvements de sortie (articles / ingrédients selon recettes).
+2. **Sortie auto — commandes** : commande validée (tous canaux) → mêmes mouvements, sans double comptage si la caisse encaissera ensuite (idempotence / lien `order_id` / `ticket_id`).
+3. **Entrées / corrections manuelles** : réception fournisseur, inventaire, casse, ajustement — UI Stock + API dédiée, journalisées.
+4. Caisse et canaux de commande **ne stockent pas** le niveau d’inventaire en propre ; ils appellent l’API Stock.
+
+### Flux Dashboard (contrat)
+
+1. **Agrège en lecture** : encaissements (caisse), commandes multi-canaux, food cost / recettes, stock, charges paramétrées (dont RH si dispo).
+2. **N’écrit pas** tickets, commandes ni quantités stock — pas de base « ventes » parallèle.
+3. KPI cœur : CA, bénéfice / marge, seuil de rentabilité, top / flop produits, panier moyen, ventilation par canal et période.
+4. Accès restreint (Tailscale + auth) ; pas d’endpoint dashboard public sans auth.
 
 ## Ce que l’agent doit éviter
 
 - Dupliquer une base “commandes” dans chaque app sans sync.
+- Dupliquer une base “stock” dans la caisse ou chaque canal de commande.
+- Recalculer le CA / bénéfice dans chaque app au lieu de s’appuyer sur le Dashboard (ou APIs sources documentées).
 - Hardcoder des IPs / mots de passe VPS dans le code.
 - Coupler l’UI d’un module au schéma interne d’un autre sans couche API.

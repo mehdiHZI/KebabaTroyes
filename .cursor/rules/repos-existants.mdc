@@ -18,7 +18,8 @@ Compte GitHub : `mehdiHZI`. Ces projets existent déjà ; ils sont **incomplets 
 | Réception commandes | `AppliReceptionCommandeKebaba` | Côté cuisine / réception |
 | Borne / commande client | (à confirmer) `Libanais` | Prise de commande terrasse — piste pour la borne |
 | Click & collect / livraison | (à confirmer) `Libanais`, `AppliReceptionCommandeKebaba` | Pistes UX commande + réception cuisine ; pas de repo dédié livraison identifié |
-| Stock | *pas de repo dédié identifié* | À créer ou extraire depuis food cost / caisse |
+| Stock | *pas de repo dédié identifié* | À **créer** (API + UI) ; pistes d’extraction depuis `FoodCostKebaba` / caisse si modèles articles/recettes utiles. Doit s’intégrer caisse + commandes + saisies manuelles (voir `kebaba-project` / `architecture-vps`) |
+| Dashboard | *pas de repo dédié identifié* | À **créer** (UI + couche agrégation lecture). Sources : caisse, commandes, food cost, stock (± RH). KPI : CA, bénéfice, seuil de rentabilité, best-sellers, etc. |
 
 URLs : `https://github.com/mehdiHZI/<nom-du-repo>`
 

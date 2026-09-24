@@ -16,14 +16,41 @@ Restaurant kebab à Troyes. Ce monorepo / espace de travail couvre **toute la st
 | **Click & collect / livraison** | Commandes en ligne (retrait magasin + livraison) | À développer / adapter |
 | **Agent IA téléphone** | Prend les commandes téléphoniques à la place d’un vendeur | Adapter l’existant |
 | **Food cost** | Calcul / suivi des coûts alimentaires | Adapter l’existant |
-| **Stock** | Gestion des stocks | À développer / brancher aux autres apps |
+| **Stock** | Inventaire temps réel ; **décrémente** via caisse + commandes ; **ajustements manuels** | À créer / brancher (pas de repo dédié) |
+| **Dashboard** | Pilotage ventes : CA, bénéfice, best-sellers, seuil de rentabilité, etc. | À créer (lecture multi-sources) |
 | **RH** | Planning, pointage, heures, etc. | Adapter l’existant |
+
+## Module Stock (exigences métier)
+
+- **Relié à la caisse** : chaque vente / article encaissé consomme le stock (via recettes / composition si besoin).
+- **Relié aux commandes** : les commandes (borne, click & collect / livraison, IA téléphone, réception cuisine) alimentent aussi les sorties de stock — même vérité que la caisse, pas un silo séparé.
+- **Modification manuelle** : inventaire, corrections, pertes, livraisons fournisseurs, inventaire physique — toujours traçable (qui / quand / pourquoi).
+- Source de vérité des **quantités en stock** = module Stock (caisse et canaux de commande n’écrivent pas le stock en local sans passer par son API).
+
+## Module Dashboard (exigences métier)
+
+Tableau de bord **complet** de pilotage du restaurant (UI FR, accès admin via Tailscale / auth — pas public).
+
+Indicateurs attendus (liste non exhaustive, extensible) :
+
+- **CA** (chiffre d’affaires) : jour / semaine / mois / période custom ; par canal (caisse, borne, click & collect, livraison, IA téléphone).
+- **Bénéfice** : marge après coûts (food cost / recettes + coûts configurables) ; vue nette vs brute selon ce qui est branché.
+- **Seuil de rentabilité** : à partir de quel CA / quelle quantité on est « en bénéfice » (charges fixes + variables paramétrables).
+- **Produits les plus vendus** (et les moins vendus) : quantités, CA, marge par article / catégorie.
+- Évolutions / comparaisons (J-1, S-1, M-1), panier moyen, volume de tickets / commandes.
+- Croisements utiles : stock restant vs ventes, food cost vs CA, performance par créneau horaire.
+
+Principes :
+
+- **Lecture seule** des sources de vérité (caisse / encaissements, commandes, food cost, stock, RH si charges) — le Dashboard **n’écrit pas** les ventes ni le stock.
+- Pas de double comptage multi-canaux (même règles d’idempotence que Stock).
+- Chiffres explicables : chaque KPI doit pouvoir se rattacher aux tickets / commandes / coûts sous-jacents.
 
 ## Principes
 
 - **Réutiliser** les repos GitHub déjà existants (même incomplets) plutôt que tout réécrire.
 - **Adapter** à Kebaba Troyes (marque, process, menu, flux) au lieu de cloner un autre resto tel quel.
-- Tout doit pouvoir **échanger des données** via le VPS (commandes multi-canaux, stock, caisse, RH, food cost).
+- Tout doit pouvoir **échanger des données** via le VPS (commandes multi-canaux, stock, caisse, RH, food cost, dashboard).
 - Les canaux de commande (borne, téléphone IA, click & collect / livraison, caisse) convergent vers le **même flux commandes** (cuisine / réception).
 - Préférer des APIs / contrats clairs entre modules plutôt que du couplage fort.
 - Français pour l’UI métier et la doc projet ; code et noms techniques en anglais sauf convention déjà établie dans un repo repris.
@@ -33,3 +60,5 @@ Restaurant kebab à Troyes. Ce monorepo / espace de travail couvre **toute la st
 - Avant de créer un module from scratch, **vérifier s’il existe déjà** dans les repos sources listés (règle `repos-existants`).
 - Quand on touche à la caisse : respecter la règle `caisse-conformite`.
 - Quand on conçoit un flux cross-apps : respecter la règle `architecture-vps`.
+- Quand on touche au stock : respecter la section « Module Stock » ci-dessus et le domaine Stock dans `architecture-vps`.
+- Quand on touche au dashboard : lecture multi-API uniquement ; pas de nouvelle « vérité » ventes / stock en local.

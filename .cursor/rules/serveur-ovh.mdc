@@ -22,7 +22,7 @@ alwaysApply: true
 
 ## Rôle du serveur
 
-Héberge **tous** les logiciels Kebaba (caisse, borne, click & collect / livraison, IA téléphone, food cost, stock, RH) pour qu’ils communiquent entre eux.
+Héberge **tous** les logiciels Kebaba (caisse, borne, click & collect / livraison, IA téléphone, food cost, stock, dashboard, RH) pour qu’ils communiquent entre eux.
 
 ## Contraintes pour l’agent
 
