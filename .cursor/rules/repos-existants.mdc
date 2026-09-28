@@ -11,7 +11,7 @@ Compte GitHub : `mehdiHZI`. Ces projets existent déjà ; ils sont **incomplets 
 
 | Module Kebaba | Repo(s) de référence | Notes |
 |---------------|----------------------|-------|
-| Caisse | `LogicielCaisseMilanoGusto` | Caisse non certifiée (MilanoGusto) → à faire évoluer vers **auto-certification** + conformité FR |
+| Caisse | `LogicielCaisseMilanoGusto` | Base Android/Kotlin **riche** mais **non certifiée** (rules upstream excluent NF525). Pour Kebaba : reprendre + combler écarts → **attestation individuelle éditeur** (`caisse-projet`, `caisse-conformite`). Ne pas garder marque MilanoGusto / catalogue pizza. |
 | Food cost | `FoodCostKebaba`, `FoodcoastParis` | Préférer `FoodCostKebaba` ; Paris en référence secondaire |
 | RH | `RHKebaba`, `LogicielRHV2`, `LogicielRHV1` | Préférer `RHKebaba` / V2 ; V1 = historique |
 | Téléphone IA | `serveurIA` | Agent / serveur IA commandes |

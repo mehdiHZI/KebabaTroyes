@@ -1,0 +1,167 @@
+---
+description: Projet caisse Kebaba — reprise LogicielCaisseMilanoGusto + intégration VPS
+alwaysApply: true
+---
+
+# Caisse Kebaba — projet & reprise MilanoGusto
+
+## Objectif
+
+Mettre en place le **logiciel de caisse** Kebaba Troyes :
+
+1. Encaissement comptoir (Android tactile).
+2. **Connectée au serveur VPS** en V1 (grosse différence vs MilanoGusto) — stock, commandes, dashboard, catalogue central.
+3. **Conforme** aux 4 conditions FR + **attestation individuelle éditeur** (règle `caisse-conformite`).
+
+## Grosse différence : caisse **connectée au serveur**
+
+| | MilanoGusto | Kebaba |
+|---|-------------|--------|
+| Réseau | **Local-only** — sync cloud explicitement hors / « plus tard » | **Connectée au VPS** dès la V1 — exigence produit |
+| Rôle du device | Seule vérité des ventes | Terminal POS + enregistrement local **et** publication vers le serveur |
+| Catalogue / prix | Sur la tablette | Peuvent être poussés / synchronisés depuis le serveur |
+| Autres apps | Aucune | Stock, réception cuisine, borne, online, IA, dashboard **reçoivent** les encaissements |
+
+### Architecture cible (obligatoire)
+
+```text
+[Tablette caisse Android]
+        |  HTTPS (Traefik) — API caisse / commandes / stock
+        v
+[VPS OVH — proxy-net]
+   ├─ API encaissements / tickets
+   ├─ Stock
+   ├─ Réception commandes / cuisine
+   └─ Dashboard (lecture)
+```
+
+- URL / auth : variables d’environnement / config appareil — **jamais** secrets en dur dans le repo.
+- Accès : réseau resto → IP publique Traefik **ou** Tailscale selon politique déployée ; pas d’API admin ouverte sans auth.
+- La connexion serveur est un **critère de recette V1** (pas un backlog « phase 2 »).
+
+### Résilience (coupure réseau)
+
+Encaisser même si le Wi‑Fi tombe brièvement :
+
+1. Enregistrement **local** du ticket (inaltérabilité inchangée).
+2. **File d’attente** de sync vers le VPS.
+3. Reprise auto dès que le serveur répond (idempotence `ticket_id`).
+4. UI : indicateur « synchronisé / en attente / erreur sync » visible pour le responsable.
+
+Ne **pas** concevoir une caisse qui ignore le serveur « comme Milano ». Ne **pas** non plus rendre le resto inutilisable 100 % du temps si Internet coupe 2 minutes — file d’attente obligatoire.
+
+## Source d’inspiration (obligatoire)
+
+Repo : [`mehdiHZI/LogicielCaisseMilanoGusto`](https://github.com/mehdiHZI/LogicielCaisseMilanoGusto)
+
+> Description upstream : *« logiciel caisse NON certifié pour MilanoGusto »*.  
+> Les règles Cursor upstream disent explicitement **hors NF525 / hors conformité fiscale** et **pas de sync cloud**.  
+> Pour Kebaba : **réutiliser le code et l’UX**, **inverser** le cadrage légal, et **ajouter la connexion serveur** comme pilier.
+
+### Ce qu’on reprend
+
+| Zone | Contenu utile upstream |
+|------|-------------------------|
+| Stack | Android, Kotlin, Jetpack Compose, Material 3, Room, DataStore |
+| Architecture | Packages UI / domain / data, montants en **centimes** (couche réseau à **ajouter** pour Kebaba) |
+| Métier | Types commande, paiements (CB, espèces, TR, mixte), panier, historique |
+| Clôture | Embrouillons Z jour/mois/année, exports JSON/PDF (base à durcir) |
+| Impression | ESC/POS, Bluetooth / réseau (valider matériel Kebaba) |
+| Docs | `docs/cahier-des-charges.md`, `docs/fermeture_caisse.md` (repères techniques) |
+| Tests | JUnit sur totaux, paiement, clôture, tickets |
+
+### Ce qu’on change pour Kebaba
+
+| Sujet | MilanoGusto | Kebaba |
+|-------|-------------|--------|
+| Marque / menu | MilanoGusto, pizzas | **Kebaba Troyes**, catalogue kebab |
+| Package / id | `com.amhsolution.caisse` | Nouveau id dédié Kebaba (à figer au bootstrap) |
+| Cadre légal | Non certifié, NF525 exclus | **4 conditions + attestation éditeur** |
+| Clôtures | Partiel (Z auto, corrections après Z incomplètes) | Z + X, avoirs/contre-tickets, totaux perpétuels, archives ouvertes |
+| **Serveur** | **Aucune** connexion — local-only | **Obligatoire V1** : API VPS (tickets, stock, cuisine, dashboard) |
+| Sync | Explicitement hors périmètre / « plus tard » | Client HTTP + auth + **outbox** offline → serveur |
+| Stats avancées | Stats session locales | Pilotage long terme → **Dashboard** VPS ; caisse = jour / clôtures + statut sync |
+
+### Écarts connus à combler (checklist conformité)
+
+Repris / adaptés de `docs/fermeture_caisse.md` upstream — **bloquants** avant attestation :
+
+- [ ] Rapport **X** provisoire
+- [ ] Clôture **Z** définitive qui verrouille vraiment + corrections uniquement par avoir / contre-opération
+- [ ] Grand total période + **total perpétuel**
+- [ ] Clôtures J / M / A conformes (pas d’écrasement ambigu de Z)
+- [ ] Archive fiscale **format ouvert** + notice FR + traçabilité purge
+- [ ] Intégrité technique (chaînage / empreinte / équivalent) démontrable
+- [ ] Mode test clairement séparé (`FACTICE` / `SIMULATION`)
+- [ ] Auth / rôles (plus de mot de passe provisoire type `1234` en prod)
+- [ ] Dossier + **attestation individuelle** pour la version livrée
+- [ ] Accès / export pour contrôle administration fiscale
+
+### Checklist connexion serveur (bloquants V1 produit)
+
+- [ ] Config endpoint VPS (base URL) + auth machine / utilisateur
+- [ ] API push ticket / paiement après encaissement (idempotent)
+- [ ] Outbox locale + retry + statut sync visible
+- [ ] Pull catalogue / TVA / paramètres depuis serveur (ou stratégie documentée)
+- [ ] Hook sorties **Stock** + événement **réception commandes**
+- [ ] Pas de secrets commités ; TLS via Traefik
+
+## Emplacement dans ce monorepo
+
+Cible prévue : `caisse/` (clone ou copie tracée depuis LogicielCaisseMilanoGusto).
+
+- Documenter dans un `caisse/CHANGELOG-KEBABA.md` : *repris* vs *changé*.
+- Ne pas mélanger libellés / assets MilanoGusto dans l’UI Kebaba.
+
+## Stack technique (V1 POS)
+
+| Besoin | Choix |
+|--------|--------|
+| Plateforme | Android (tablette / TPV) |
+| Langage UI | Kotlin + Jetpack Compose |
+| Persistance locale | Room (SQLite) |
+| Montants | Centimes entiers — **jamais** Float/Double |
+| Sync VPS | **Obligatoire** — client API + outbox ; HTTPS Traefik |
+| Livraison | APK (hors store ou policy à valider) |
+
+Matériel : à caler sur le resto (tablette, TPE autonome comme upstream, imprimante thermique). Ne pas figer l’impression avant test matériel réel. Prévoir **Wi‑Fi fiable** au comptoir (la caisse est conçue pour le serveur).
+
+## Intégration VPS (contrats)
+
+La caisse est un **client du serveur**. Après encaissement validé :
+
+1. Persister localement (preuve / inaltérabilité / reprise offline).
+2. Enqueue + push API **ticket + paiement** → VPS (réception cuisine / historique central).
+3. Déclencher **Stock** (sorties, idempotence `ticket_id`).
+4. Alimenter le **Dashboard** en lecture via les APIs serveur (pas une base CA parallèle dans l’APK).
+
+Coupure serveur : encaissement local OK + file de sync ; alerte si retard de sync trop long.
+
+## Utilisateurs
+
+- **Caissier** : commande, encaissement, impression
+- **Responsable** : historique, corrections traçables, clôtures, archives, exports
+- **Admin** : installation, config, sauvegardes, versions, dossier conformité
+
+## Ordre de travail recommandé
+
+1. Cloner / importer `LogicielCaisseMilanoGusto` → `caisse/`
+2. Rebrand Kebaba + purge catalogue pizza
+3. **Couche réseau VPS** (auth, API tickets, outbox sync) — chantier majeur vs upstream
+4. Durcir traçabilité / clôtures / archives (checklist conformité)
+5. Brancher stock + réception commandes + smoke test dashboard
+6. Dossier conformité + attestation pour la version
+
+## Règles liées
+
+- `caisse-conformite` — légal / attestation
+- `caisse-metier` — règles métier POS
+- `architecture-vps`, `vps-securite`, `kebaba-project`
+
+## Ce que l’agent ne doit pas faire
+
+- Repartir d’une caisse from scratch sans lire le repo MilanoGusto.
+- Copier les rules upstream « hors certification » **ou** « pas de sync cloud ».
+- Livrer une V1 Kebaba **sans** client API / sync serveur.
+- Coupler l’UI au schéma SQL du stock/dashboard.
+- Committer secrets, mots de passe clôture, clés de signature d’intégrité, tokens API en clair.

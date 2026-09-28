@@ -11,7 +11,7 @@ Restaurant kebab à Troyes. Ce monorepo / espace de travail couvre **toute la st
 
 | Module | Rôle | Priorité d’approche |
 |--------|------|---------------------|
-| **Caisse** | Encaissement ; **auto-certification** et conformité loi française (logiciel de caisse) | Adapter l’existant, ne pas repartir de zéro |
+| **Caisse** | Encaissement ; **auto-attestation éditeur** (4 conditions FR) ; sync VPS | Reprendre `LogicielCaisseMilanoGusto` + durcir conformité (voir `caisse-projet`) |
 | **Borne** | Prise de commande client en self-service | À développer / adapter |
 | **Click & collect / livraison** | Commandes en ligne (retrait magasin + livraison) | À développer / adapter |
 | **Agent IA téléphone** | Prend les commandes téléphoniques à la place d’un vendeur | Adapter l’existant |
@@ -57,8 +57,8 @@ Principes :
 
 ## Ce que l’agent doit faire
 
+- Quand on touche à la caisse : respecter `caisse-projet`, `caisse-conformite`, `caisse-metier`.
 - Avant de créer un module from scratch, **vérifier s’il existe déjà** dans les repos sources listés (règle `repos-existants`).
-- Quand on touche à la caisse : respecter la règle `caisse-conformite`.
 - Quand on conçoit un flux cross-apps : respecter la règle `architecture-vps`.
 - Quand on touche au stock : respecter la section « Module Stock » ci-dessus et le domaine Stock dans `architecture-vps`.
 - Quand on touche au dashboard : lecture multi-API uniquement ; pas de nouvelle « vérité » ventes / stock en local.

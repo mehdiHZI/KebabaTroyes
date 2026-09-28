@@ -1,0 +1,81 @@
+---
+description: Règles métier POS caisse Kebaba (commandes, paiements, tickets, clôtures)
+globs: "**/caisse/**/*,**/android_app/**/*.kt"
+alwaysApply: false
+---
+
+# Règles métier — caisse Kebaba
+
+Inspiré de `LogicielCaisseMilanoGusto` (`.cursor/rules/metier-caisse.mdc`), adapté marque Kebaba + conformité.
+
+## Types de commande
+
+`sur_place` | `a_emporter` | `livraison` | (plus tard) canaux digitaux via sync — une commande encaissée en caisse reste la source d’encaissement POS.
+
+Statuts typiques : `a_regler` | `a_regler_livraison` | `encaissee` | `annulee` (annulation = opération liée, pas delete).
+
+## Moyens de paiement
+
+`carte_bancaire` | `especes` | `titre_restaurant` | `autre`
+
+- Paiement **mixte** autorisé ; somme des règlements = total TTC.
+- Espèces : montant reçu + **rendu** (centimes).
+- CB : TPE **autonome** — saisie montant sur TPE puis confirmation manuelle dans l’app (sauf décision contraire documentée).
+
+## Ticket / justificatif (données à persister)
+
+Numéro stable, date/heure, opérateur, n° caisse, type commande, lignes (libellé, qté, PU, HT, TVA), total TTC, règlement(s), rendu, liens correction/annulation, marqueurs intégrité, flag mode test.
+
+Montants : **centimes entiers** uniquement.
+
+```kotlin
+// ✅
+val totalCentimes: Long = 1850
+// ❌
+val total = 18.50
+```
+
+## Traçabilité (non négociable)
+
+- Ticket **encaissé** : pas d’édition UI, pas de suppression.
+- Correction / annulation : **nouvelle** opération (avoir / contrepassation) liée à l’originale.
+- Réimpression : journalisée.
+- Après clôture Z de la période : consultation seule ; toute correction = nouvelle opération sur période ouverte (ou procédure documentée).
+
+## Catalogue
+
+Catégories + articles Kebaba : libellé, prix TTC, taux TVA, options (viande, sauces, menus…) — **pas** de catalogue pizza MilanoGusto en prod.
+
+Prix éventuellement selon type de commande si configuré.
+
+## Clôtures & contrôle
+
+- **X** : totaux session / jour sans figer.
+- **Z journalière / mensuelle / annuelle** : fige période, calcule grand total + total perpétuel, verrouille les ventes de la période.
+- Commandes non encaissées : **hors** CA clôturé.
+- Export / archive : voir `caisse-conformite`.
+
+## Calculs à couvrir en tests JUnit
+
+- Total panier multi-lignes + TVA
+- Paiement mixte = total
+- Rendu monnaie
+- Annulation / avoir : original intact, solde cohérent
+- Clôture : totaux = somme tickets éligibles ; compteurs perpétuels monotones
+
+## Connexion serveur (obligatoire)
+
+Contrairement à MilanoGusto (local-only), la caisse Kebaba **doit** dialoguer avec le VPS :
+
+- Après chaque encaissement : publier le ticket / paiement (idempotent `ticket_id`).
+- Déclencher sorties **Stock** via API serveur — pas de stock local « vérité ».
+- Afficher l’état de sync ; outbox si offline temporaire.
+- Paramètres / catalogue : synchronisables depuis le serveur quand c’est la source retenue.
+
+## Hors périmètre (ne pas coder sans décision)
+
+- Caisse 100 % offline sans jamais parler au serveur (modèle Milano — **rejeté** pour Kebaba)
+- Intégration SDK TPE bancaire native (sauf chantier dédié)
+- Se présenter comme « certifié NF525 » sans certificat organisme
+- Stats de pilotage long terme (bénéfice, seuil rentabilité) → module **Dashboard**
+- RH / planning dans l’APK caisse

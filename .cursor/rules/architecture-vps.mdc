@@ -28,6 +28,13 @@ Tout est hébergé sur le **VPS OVH** (voir règle `serveur-ovh` : VPS-3, Gravel
 | Food cost | Food cost | Dashboard (marge / bénéfice), lecture recettes / coûts / pertes |
 | **Dashboard** | **Module dashboard** (agrégation lecture seule) | Direction / gérant (UI) |
 | RH | RH | Planning ops ; dashboard si charges de personnel |
+### Flux Caisse ↔ VPS (contrat)
+
+1. La caisse Android est un **client connecté** du VPS (grosse différence vs MilanoGusto local-only).
+2. Chaque encaissement est enregistré localement **puis** poussé au serveur (outbox si offline).
+3. Le serveur notifie / met à jour stock, réception cuisine, et alimente le dashboard.
+4. Auth + TLS ; pas d’écriture directe BDD stock/dashboard depuis l’APK.
+
 ### Flux Stock (contrat)
 
 1. **Sortie auto — caisse** : ticket encaissé → mouvements de sortie (articles / ingrédients selon recettes).
@@ -48,4 +55,5 @@ Tout est hébergé sur le **VPS OVH** (voir règle `serveur-ovh` : VPS-3, Gravel
 - Dupliquer une base “stock” dans la caisse ou chaque canal de commande.
 - Recalculer le CA / bénéfice dans chaque app au lieu de s’appuyer sur le Dashboard (ou APIs sources documentées).
 - Hardcoder des IPs / mots de passe VPS dans le code.
+- Concevoir la caisse comme MilanoGusto (local-only sans sync serveur).
 - Coupler l’UI d’un module au schéma interne d’un autre sans couche API.
