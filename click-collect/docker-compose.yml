@@ -1,0 +1,64 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: kebaba-click-collect-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: kebaba_click_collect
+      POSTGRES_USER: kebaba
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    volumes:
+      - kebaba_cc_pg:/var/lib/postgresql/data
+    networks:
+      - proxy-net
+    # Uniquement loopback host — jamais 0.0.0.0 (Docker contourne UFW)
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kebaba -d kebaba_click_collect"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  app:
+    build: .
+    image: kebaba-click-collect:latest
+    container_name: kebaba-click-collect
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgres://kebaba:${POSTGRES_PASSWORD}@db:5432/kebaba_click_collect
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET}
+      AUTH_URL: ${AUTH_URL:-https://kebaba.fr}
+      AUTH_TRUST_HOST: "true"
+      AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:-}
+      AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:-}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://kebaba.fr}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
+    networks:
+      - proxy-net
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy-net"
+      - "traefik.http.routers.kebaba.rule=Host(`kebaba.fr`) || Host(`www.kebaba.fr`)"
+      - "traefik.http.routers.kebaba.entrypoints=websecure"
+      - "traefik.http.routers.kebaba.tls.certresolver=myresolver"
+      - "traefik.http.services.kebaba.loadbalancer.server.port=3000"
+      # Redirect HTTP → HTTPS
+      - "traefik.http.routers.kebaba-http.rule=Host(`kebaba.fr`) || Host(`www.kebaba.fr`)"
+      - "traefik.http.routers.kebaba-http.entrypoints=web"
+      - "traefik.http.routers.kebaba-http.middlewares=kebaba-https-redirect"
+      - "traefik.http.middlewares.kebaba-https-redirect.redirectscheme.scheme=https"
+
+networks:
+  proxy-net:
+    external: true
+
+volumes:
+  kebaba_cc_pg:

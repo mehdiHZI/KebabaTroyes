@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+:root {
+  --kebaba-cream: #f3efe6;
+  --kebaba-cream-deep: #ebe4d6;
+  --kebaba-bordeaux: #6b1220;
+  --kebaba-bordeaux-deep: #4a0c16;
+  --kebaba-ink: #2a1218;
+  --kebaba-ink-muted: #5c4a4e;
+  --kebaba-card: #ffffff;
+  --background: var(--kebaba-cream);
+  --foreground: var(--kebaba-ink);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-kebaba-cream: var(--kebaba-cream);
+  --color-kebaba-bordeaux: var(--kebaba-bordeaux);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+}
+
+body {
+  background-color: var(--kebaba-cream);
+  background-image:
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--kebaba-bordeaux) 18%, transparent) 0%, transparent 42%),
+    radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--kebaba-bordeaux) 14%, transparent) 0%, transparent 40%),
+    linear-gradient(var(--kebaba-cream-deep) 1px, transparent 1px),
+    linear-gradient(90deg, var(--kebaba-cream-deep) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    100% 100%,
+    22px 22px,
+    22px 22px;
+  color: var(--kebaba-ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), var(--font-body), system-ui, sans-serif;
+}
+
+.kebaba-card {
+  background: var(--kebaba-card);
+  border: 1.5px solid color-mix(in srgb, var(--kebaba-bordeaux) 55%, transparent);
+  border-radius: 1rem;
+}
+
+.kebaba-category-title {
+  display: inline-block;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  font-size: 1.35rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--kebaba-bordeaux);
+  padding: 0.35rem 0.9rem;
+  border-radius: 0.75rem;
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--kebaba-bordeaux-deep) 80%, #000);
+}
+
+.kebaba-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.85rem;
+  background: var(--kebaba-bordeaux);
+  color: #fff;
+  font-weight: 700;
+  padding: 0.75rem 1.25rem;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.kebaba-btn:hover {
+  background: var(--kebaba-bordeaux-deep);
+}
+
+.kebaba-btn:active {
+  transform: scale(0.98);
+}
+
+.kebaba-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.85rem;
+  border: 1.5px solid var(--kebaba-bordeaux);
+  color: var(--kebaba-bordeaux);
+  font-weight: 700;
+  padding: 0.75rem 1.25rem;
+  background: transparent;
+}

@@ -44,9 +44,10 @@ val total = 18.50
 
 ## Catalogue
 
-Catégories + articles Kebaba : libellé, prix TTC, taux TVA, options (viande, sauces, menus…) — **pas** de catalogue pizza MilanoGusto en prod.
+Source : règle **`carte-kebaba`** (éléments seuls + prix TTC).
 
-Prix éventuellement selon type de commande si configuré.
+Catégories + articles Kebaba : libellé, prix TTC, taux TVA, options (viande, sauces, menus…) **quand fournies**.  
+**Pas** de catalogue pizza MilanoGusto en prod.
 
 ## Clôtures & contrôle
 
