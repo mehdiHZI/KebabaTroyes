@@ -86,3 +86,9 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
+
+// Android Studio lance parfois :app:wrapper / prepareKotlinBuildScriptModel
+// quand le module app a été ouvert comme projet (présence de app/.idea).
+// No-op : le vrai Gradle Wrapper reste à la racine android_app/.
+tasks.register("wrapper")
+tasks.register("prepareKotlinBuildScriptModel")

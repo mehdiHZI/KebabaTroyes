@@ -14,3 +14,9 @@
 .cxx
 local.properties
 /.gradle-local.properties
+
+# Ne jamais traiter app/ comme projet Android Studio racine
+/app/.idea/
+/app/.gradle/
+/app/local.properties
+/app/build/
