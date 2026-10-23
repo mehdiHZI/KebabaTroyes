@@ -23,7 +23,9 @@ export default async function ComptePage({ searchParams }: Props) {
           Mon compte
         </h1>
         <p className="text-[var(--kebaba-ink-muted)]">
-          Créez un compte ou connectez-vous pour passer commande.
+          {session?.user
+            ? "Retrouvez vos commandes et suivez leur préparation."
+            : "Créez un compte ou connectez-vous pour passer commande."}
         </p>
       </header>
 
@@ -42,9 +44,11 @@ export default async function ComptePage({ searchParams }: Props) {
         errorCode={error}
       />
 
-      <Link href="/menu" className="kebaba-btn-outline inline-flex">
-        Continuer vers le menu
-      </Link>
+      {!session?.user ? (
+        <Link href="/menu" className="kebaba-btn-outline inline-flex">
+          Continuer vers le menu
+        </Link>
+      ) : null}
     </div>
   );
 }

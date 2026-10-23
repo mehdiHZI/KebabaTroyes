@@ -1,0 +1,59 @@
+---
+description: Règles métier caisse restaurant (commandes, paiements, traçabilité)
+globs: android_app/**/*.kt
+alwaysApply: false
+---
+
+# Règles métier — caisse restaurant
+
+## Types de commande
+
+`sur_place` | `a_emporter` | `livraison`
+
+Prix pouvant varier selon le type (à configurer). Statuts : `a_regler`, `a_regler_livraison`, `encaissee`, `annulee`.
+
+## Moyens de paiement
+
+`carte_bancaire` | `especes` | `titre_restaurant` | `autre`
+
+- **Paiement mixte** : plusieurs règlements pour une commande
+- **Espèces** : stocker montant reçu + rendu monnaie
+- **Carte** : confirmation manuelle après saisie sur TPE autonome (pas d'intégration TPE)
+
+## Données transaction (à conserver)
+
+Numéro de justificatif, date/heure, opérateur, type commande, lignes (libellé, quantité, prix, TVA), total TTC, moyen(s) de paiement, rendu éventuel, lien correction/annulation.
+
+## Traçabilité (obligatoire)
+
+- Transaction validée → **pas de modification directe**, **pas de suppression** depuis l'UI
+- Correction ou annulation → **nouvelle opération** liée à l'originale
+- Réimpressions → enregistrées
+- Clôture journalière → conserve les totaux du jour
+- Chaque opération : identifiant stable + horodatage
+
+## Catalogue
+
+Articles par catégorie. Champs : libellé, prix TTC, taux TVA. Configuration via écran Prix (responsable).
+
+## Calculs critiques (à tester en JUnit)
+
+```kotlin
+// Exemples de cas à couvrir
+// - Total panier multi-lignes
+// - Paiement mixte : somme des règlements = total
+// - Rendu monnaie : recuCentimes - totalCentimes
+// - Annulation : opération négative liée, original intact
+```
+
+## Hors périmètre (ne pas coder, ne pas proposer)
+
+- **NF525** — aucune fonctionnalité, contrainte ou architecture liée à cette norme
+- Conformité fiscale / certification légale de caisse
+- Synchronisation cloud (évolution facultative ultérieure)
+- Intégration directe TPE bancaire
+- Impression cuisine (mode de transmission à valider avec le client)
+
+## Questions client encore ouvertes
+
+Imprimante, cuisine, tiroir-caisse, remises, TVA, données livraison, droits annulation — voir section 11 de `docs/cahier-des-charges.md`.

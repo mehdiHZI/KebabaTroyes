@@ -1,0 +1,38 @@
+.DS_Store
+**/.DS_Store
+
+# Android / Gradle
+android_app/.gradle/
+android_app/.kotlin/
+android_app/**/build/
+android_app/local.properties
+android_app/.idea/workspace.xml
+android_app/.idea/caches/
+android_app/.idea/libraries/
+android_app/.idea/deploymentTargetSelector.xml
+android_app/.idea/deviceManager.xml
+
+# LaTeX temporary files
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# Personal stage notes / archives
+rapport_stage/
+docs/journal_developpement.md
+docs/journaux/
+
+# Python / tooling caches
+__pycache__/
+*.pyc
+
+# Generated archives
+*.zip
+
+# Local menu source PDFs are too large for GitHub's regular file limit.
+# Keep them in assets/menu/flyers/current/ locally, or use Git LFS later.
+assets/menu/flyers/current/*.pdf

@@ -53,17 +53,22 @@ export function CompteAuth({ user, googleEnabled, errorCode }: Props) {
             <p className="text-sm text-[var(--kebaba-ink-muted)]">{user.email}</p>
           </div>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Link href="/menu" className="kebaba-btn flex-1 text-center">
-            Commander
+        <div className="flex flex-col gap-2">
+          <Link href="/commandes" className="kebaba-btn w-full text-center">
+            Mes commandes &amp; suivi
           </Link>
-          <button
-            type="button"
-            className="kebaba-btn-outline flex-1"
-            onClick={() => signOut({ callbackUrl: "/compte" })}
-          >
-            Se déconnecter
-          </button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Link href="/menu" className="kebaba-btn-outline flex-1 text-center">
+              Commander
+            </Link>
+            <button
+              type="button"
+              className="kebaba-btn-outline flex-1"
+              onClick={() => signOut({ callbackUrl: "/compte" })}
+            >
+              Se déconnecter
+            </button>
+          </div>
         </div>
       </div>
     );

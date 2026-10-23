@@ -1,14 +1,16 @@
 ---
-description: Cadre légal FR logiciel de caisse — 4 conditions + auto-attestation éditeur
+description: Cadre légal FR caisse — NF525 vs attestation, critères ISCA, SANS AUCUN COMPROMIS
 globs: "**/caisse/**/*,**/pos/**/*,**/cash*/**/*,**/*Caisse*/**/*"
 alwaysApply: true
 ---
 
-# Caisse Kebaba — conformité légale France
+# Caisse Kebaba — conformité légale France (SANS AUCUN COMPROMIS)
 
-Objectif produit : logiciel de caisse **utilisable en production** pour un restaurant assujetti à la TVA (ventes à des particuliers), justifié par **attestation individuelle de l’éditeur** (auto-certification), pas seulement une app « de gestion ».
+Objectif produit : logiciel de caisse **utilisable en production** pour un restaurant assujetti à la TVA (ventes à des particuliers), justifié par **attestation individuelle de l’éditeur**, pas seulement une app « de gestion ».
 
-> Ceci n’est **pas** un avis juridique. Sources de référence : CGI art. 286-I-3° bis, BOFiP `BOI-TVA-DECLA-30-10-30`, modèle d’attestation BOFiP. En cas de doute : expert-comptable / fiscaliste.
+**Règle absolue pour l’agent** : aucune feature, raccourci, « temporaire », mode debug ou reprise MilanoGusto ne peut **affaiblir** les 4 critères ISCA. Si une demande les casse → **refuser** et proposer une correction conforme (avoir / contre-opération / nouveau ticket).
+
+> Ceci n’est **pas** un avis juridique. Sources : CGI art. 286-I-3° bis, BOFiP `BOI-TVA-DECLA-30-10-30`, modèle d’attestation BOFiP. En cas de doute : expert-comptable / fiscaliste.
 
 ## Pourquoi Kebaba est concerné
 
@@ -16,52 +18,69 @@ Objectif produit : logiciel de caisse **utilisable en production** pour un resta
 - Logiciel **développé en interne / sur mesure** : aussi concerné (BOFiP).
 - Les **bornes** qui encaissent (pas seulement commander) entrent dans le même dispositif pour la fonctionnalité de caisse.
 
-## Deux façons de justifier (loi finances 2026, art. 125)
+## Marque officielle NF525 vs auto-attestation
+
+### 1. Certification officielle NF525 — coût (ne pas retenir en V1)
+
+Apposer le logo officiel **NF525** (organisme accrédité Infocert / AFNOR) ou certification équivalente **LNE** = budget très conséquent (audit code, tests sécurité, conformité admin) :
+
+| Poste | Ordre de grandeur |
+|-------|-------------------|
+| Coût initial (1ère année) | **8 000 € – 15 000 € HT** (cahier des charges, audit multi-jours, certificat) |
+| Maintien annuel | **~4 000 € – 5 000 € HT** / an (audits de suivi) |
+
+L’État a réintroduit l’**attestation individuelle** pour ne pas pénaliser les petits éditeurs face à ce coût. **Voie retenue Kebaba = attestation individuelle**, pas la certification NF525 payante (sauf décision business explicite ultérieure).
+
+### 2. Auto-certification légale (voie Kebaba)
+
+**Interdit** : utiliser le terme **« Certifié NF525 »** (marque déposée) ou afficher le logo NF525 sans certificat Infocert / AFNOR / LNE.
+
+**Autorisé** : fournir au client une **attestation individuelle de conformité** (CGI art. 286), qui protège l’assujetti (amende type **7 500 €** en cas de défaut de justification).
+
+Pour que l’attestation soit **légale**, deux conditions strictes **sans compromis** :
+
+1. Respecter **techniquement** les critères **ISCA** (ci-dessous) dans le code et la base.
+2. Émettre l’attestation selon le **modèle** administration fiscale (nom logiciel, **version**, licence éventuelle, date ; affirmation explicite des 4 piliers ; signature représentant éditeur). Une **version majeure** nouvelle → **nouvelle** attestation.
+
+Ne **jamais** afficher « certifié NF525 », « NF525 », ou « conforme » en UI / marketing tant que l’attestation (ou un certificat organisme) n’est pas émise pour **cette** version précise.
 
 | Voie | Description | Cible Kebaba |
 |------|-------------|--------------|
-| **Certificat** organisme accrédité (ex. NF525 / organisme COFRAC) | Tiers accrédité | Option ultérieure si besoin |
-| **Attestation individuelle éditeur** | Éditeur atteste qu’**une version** respecte les 4 conditions | **Voie retenue** |
+| Certificat organisme (NF525 / LNE) | Tiers accrédité, coût élevé | Option ultérieure si besoin |
+| **Attestation individuelle éditeur** | Éditeur atteste qu’**une version** respecte ISCA | **Voie retenue** |
 
-L’attestation :
+## Critères ISCA — 4 piliers anti-fraude TVA (obligatoires, cumulatifs)
 
-- suit le **modèle** administration fiscale ;
-- cite nom logiciel, **version**, licence éventuelle, date d’acquisition ;
-- affirme explicitement **inaltérabilité, sécurisation, conservation, archivage** ;
-- est signée par le représentant de l’éditeur ;
-- une **version majeure** nouvelle → **nouvelle** attestation.
+Le code et la base de données **doivent** respecter ces 4 piliers. Aucun pilier n’est optionnel.
 
-Ne **jamais** afficher « certifié NF525 » ou « conforme » tant que l’attestation (ou certificat) n’est pas émise pour **cette** version.
+### I — Inaltérabilité
 
-## Les 4 conditions (obligatoires, cumulatives)
-
-### 1. Inaltérabilité
-
-- Données de transaction **non modifiables** sans trace.
-- Corrections / annulations = opérations de **plus / moins** (nouvel enregistrement lié), **jamais** d’édition silencieuse du ticket d’origine.
-- Preuve d’intégrité dans le temps (ex. empreinte, chaînage, signature) + impossibilité UI de « réécrire » l’historique.
+- Une fois **validée**, une transaction **ne peut plus** être modifiée ni supprimée.
+- Toute correction (avoir, annulation) = **nouvelle transaction distincte** liée à l’originale — **jamais** d’édition silencieuse du ticket d’origine.
+- Les logs système enregistrent le **moindre** événement pertinent (création, paiement, correction, clôture, export, purge…).
 - L’administration doit pouvoir voir données d’origine **et** détail daté des corrections.
+- Preuve d’intégrité dans le temps (empreinte / chaînage / signature) + **aucune** UI de « réécriture » d’historique.
 
-### 2. Sécurisation
+### S — Sécurisation
 
 - Empêcher suppression / altération sans trace (tous opérateurs).
-- Procédé fiable (chaînage, signature électronique, etc.).
-- Mode **école / test** : données et tickets clairement `FACTICE` / `SIMULATION` ; opérateur identifiable.
+- Données d’origine et modifications successives **sécurisées** : en pratique **chaînage des données** + **signature électronique / cryptographique** des lignes de vente (ou équivalent démontrable).
+- Mode **école / test** : données et tickets clairement `FACTICE` / `SIMULATION` ; opérateur identifiable ; **séparé** des données production.
 
-### 3. Conservation
+### C — Conservation
 
-- Conserver toutes les données de détail (pas seulement les Z).
-- Délai de référence comptable / contrôle : **6 ans** (LPF L. 102 B) — archives + preuves d’intégrité.
-- Clôtures **obligatoires** : **journalière**, **mensuelle**, **annuelle** (ou par exercice) — cumulatives.
-- Pour chaque clôture : données cumulatives inaltérables, dont **grand total de période** et **total perpétuel** (compteur depuis 1ère utilisation, ne revient jamais à zéro sauf changement de matériel/logiciel avec archivage des anciens compteurs).
-- Changement de **version** mineure : compteurs **continuent** ; changement matériel/logiciel : reset + archive des anciens.
+- Conserver **toutes** les données de détail (pas seulement les Z).
+- Durée minimale de référence : **6 ans** (LPF L. 102 B) — archives + preuves d’intégrité.
+- Clôtures **obligatoires** : **journalière**, **mensuelle**, **annuelle** (ou par exercice) — cumulatives ; automatisables / imposées par le process.
+- Chaque clôture : données cumulatives inaltérables, dont **grand total de période** et **total perpétuel** (depuis la 1ère utilisation ; ne revient **jamais** à zéro sauf changement matériel/logiciel avec **archivage** des anciens compteurs).
+- Version mineure : compteurs **continuent** ; changement matériel/logiciel : reset + archive des anciens.
 
-### 4. Archivage
+### A — Archivage
 
 - Fonction d’**archivage** distincte d’une simple sauvegarde de reprise après panne.
-- Périodicité au plus annuelle / par exercice ; fige les données + date certaine.
-- Format **ouvert** lisible par l’admin fiscale + **notice FR**.
-- Traçabilité des générations d’archives / purges ; purge seulement **après** archive complète ; totaux cumulatifs restent **en ligne** sécurisés.
+- Capacité à générer une **archive technique lisible, figée et horodatée** pour l’administration fiscale (contrôle).
+- Périodicité au plus annuelle / par exercice ; format **ouvert** + **notice FR**.
+- Traçabilité des générations / purges ; purge **seulement après** archive complète ; totaux cumulatifs restent **en ligne** sécurisés.
 
 ## Données minimales d’une transaction (BOFiP)
 
@@ -74,7 +93,7 @@ Enregistrer **ligne à ligne** :
 - détail articles (libellé, qté, PU, total HT ligne, taux TVA) ;
 - modes de règlement ;
 - traces de modifications / corrections ;
-- données d’intégrité / traçabilité.
+- données d’intégrité / traçabilité (chaînage / signature).
 
 Aussi : données mode test / école.
 
@@ -86,27 +105,37 @@ Aussi : données mode test / école.
 | Rapport **X** | Totaux **provisoires**, rien n’est figé |
 | Clôture **Z** (jour / mois / année) | Période **figée**, enregistrement définitif inaltérable |
 
-Après Z : pas de modif directe des tickets de la période → avoir / contre-opération traçable.
+Après Z : pas de modif directe des tickets de la période → avoir / contre-opération traçable **uniquement**.
 
-## Dossier d’auto-attestation (à produire avant prod)
+## Dossier d’auto-attestation (bloquant avant prod)
 
 Tenir à jour sous `caisse/docs/conformite/` (ou équivalent) :
 
 1. Description version (hash build / versionName / versionCode).
-2. Matrice **exigence BOFiP ↔ feature / test**.
+2. Matrice **exigence ISCA / BOFiP ↔ feature / test**.
 3. Procédures clôture J/M/A, archivage, export contrôle.
-4. Preuves tests (inaltérabilité, mode test, purge/archive).
+4. Preuves tests (inaltérabilité, chaînage/signature, mode test, purge/archive).
 5. Modèle d’attestation rempli + process de signature éditeur.
 6. Journal des versions majeures / mineures.
 
 ## Sanctions (rappel)
 
-Fausse attestation / défaut de justification = risque fiscal lourd pour l’assujetti ; l’éditeur engage sa responsabilité sur l’attestation. **Ne pas** livrer une attestation « de complaisance ».
+Fausse attestation / défaut de justification = risque fiscal lourd pour l’assujetti (amende type **7 500 €**) ; l’éditeur engage sa responsabilité. **Interdit** : attestation « de complaisance » ou UI qui prétend la conformité sans ISCA réellement implémenté.
 
-## Ce que l’agent doit faire / refuser
+## Ce que l’agent doit faire / refuser (SANS AUCUN COMPROMIS)
 
-- Toute feature touchant totaux, tickets, remises, annulations, clôtures, exports → **audit-first**.
-- Signaler si une demande **casse** une des 4 conditions.
-- Interdit en prod : backdoor, SQL manuel sur tickets, « debug rewrite history », suppression soft sans contrepassation.
+**Faire :**
+
+- Toute feature touchant totaux, tickets, remises, annulations, clôtures, exports, sync serveur → **audit-first** contre ISCA.
+- Signaler immédiatement si une demande **casse** un des 4 piliers.
+- Concevoir corrections uniquement via **nouvelles** opérations (avoir / contre-ticket).
 - Séparer **données test** et **données production**.
-- Ne pas reprendre le cadrage MilanoGusto « NF525 hors périmètre / non certifié » tel quel — pour Kebaba c’est l’**inverse** : combler les écarts jusqu’à attestation.
+
+**Refuser / ne jamais livrer :**
+
+- Terme ou badge **« Certifié NF525 »** / logo NF525 sans certificat organisme.
+- Backdoor, SQL manuel sur tickets, « debug rewrite history », soft-delete sans contrepassation.
+- Édition / suppression d’un ticket déjà validé.
+- Clôture Z écrasable / réversible sans archive.
+- Mode prod sans chaînage / signature (ou équivalent) démontrable.
+- Reprise du cadrage MilanoGusto « NF525 hors périmètre / non certifié » — pour Kebaba c’est l’**inverse** : combler les écarts jusqu’à **attestation individuelle** sur une version ISCA-complète.

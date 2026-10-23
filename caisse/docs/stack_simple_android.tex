@@ -1,0 +1,262 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[a4paper,margin=1.65cm,top=1.45cm,bottom=1.55cm]{geometry}
+\usepackage{fontspec}
+\usepackage[french]{babel}
+\usepackage{microtype}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{ragged2e}
+\usepackage[table]{xcolor}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage[most]{tcolorbox}
+\usepackage{hyperref}
+\usepackage{xurl}
+
+\setmainfont{Arial}
+\setsansfont{Arial}
+\renewcommand{\familydefault}{\sfdefault}
+
+\definecolor{primary}{HTML}{17365D}
+\definecolor{secondary}{HTML}{2F75B5}
+\definecolor{softblue}{HTML}{EAF3F8}
+\definecolor{softgray}{HTML}{F3F5F7}
+\definecolor{linegray}{HTML}{D5DCE3}
+\definecolor{textgray}{HTML}{4C5967}
+\definecolor{softgreen}{HTML}{EAF5EE}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=primary,
+  urlcolor=secondary,
+  pdftitle={Stack Android simple - logiciel de caisse},
+  pdfauthor={AMH Solution}
+}
+\urlstyle{same}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\renewcommand{\arraystretch}{1.22}
+\setlist[itemize]{leftmargin=5mm,itemsep=1.5pt,topsep=2pt}
+\setlist[enumerate]{leftmargin=6mm,itemsep=1.5pt,topsep=2pt}
+
+\titleformat{\section}
+  {\Large\bfseries\color{primary}}
+  {\thesection.}{0.45em}{}
+\titlespacing*{\section}{0pt}{10pt}{4pt}
+
+\titleformat{\subsection}
+  {\normalsize\bfseries\color{secondary}}
+  {}{0pt}{}
+\titlespacing*{\subsection}{0pt}{7pt}{3pt}
+
+\pagestyle{fancy}
+\setlength{\headheight}{22pt}
+\fancyhf{}
+\fancyhead[L]{\small\color{textgray}AMH Solution --- logiciel de caisse}
+\fancyhead[R]{\small\color{textgray}Stack Android simple}
+\fancyfoot[C]{\small\color{textgray}\thepage}
+\renewcommand{\headrulewidth}{0.35pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{linegray}\leaders\hrule height \headrulewidth\hfill}}
+
+\newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+\newcommand{\source}[2]{\href{#2}{#1}}
+
+\begin{document}
+
+\begin{center}
+  {\fontsize{22}{26}\selectfont\bfseries\color{primary}
+  Stack Android simple pour APK}\\[3pt]
+  {\large Version allégée pour logiciel de caisse restaurant}\\[7pt]
+  {\small\color{textgray}Note technique courte --- 3 juin 2026}
+\end{center}
+
+\begin{tcolorbox}[
+  colback=softgreen,
+  colframe=primary,
+  boxrule=0.8pt,
+  arc=2pt,
+  left=8pt,right=8pt,top=7pt,bottom=7pt
+]
+\textbf{\color{primary}Recommandation}\\
+Pour le client actuel et un devis limité, partir sur une \textbf{application Android native en APK}
+avec \textbf{Kotlin}, \textbf{Jetpack Compose}, \textbf{Room / SQLite} et une impression validée
+sur le matériel réel. Cette stack est plus simple à livrer qu'une architecture Electron ou cloud,
+et correspond mieux à une tablette ou un terminal POS Android.
+\end{tcolorbox}
+
+\section{Objectif}
+
+Livrer une première version exploitable centrée sur l'encaissement local :
+
+\begin{itemize}
+  \item installer l'application sous forme de fichier \texttt{.apk} ;
+  \item fonctionner sans connexion Internet ;
+  \item stocker les articles, commandes, paiements et historiques localement ;
+  \item imprimer une note client après validation du matériel ;
+  \item produire des exports simples en \texttt{JSON} ou \texttt{CSV}.
+\end{itemize}
+
+Cette proposition sert au périmètre client court. L'option interne Electron / React peut rester
+une piste d'apprentissage ou de produit futur.
+
+\section{Stack proposée}
+
+\rowcolors{2}{softgray}{white}
+\begin{tabularx}{\textwidth}{L{3.55cm} L{3.45cm} Y}
+  \toprule
+  \rowcolor{primary}
+  \color{white}\textbf{Besoin} &
+  \color{white}\textbf{Choix} &
+  \color{white}\textbf{Rôle} \\
+  \midrule
+  Plateforme cible &
+  Android &
+  Installer l'application sur tablette Android ou terminal POS Android. \\
+  Format de livraison &
+  \texttt{APK} &
+  Fournir un fichier installable directement sur l'appareil du client. \\
+  Langage principal &
+  Kotlin &
+  Développer une application Android native maintenable. \\
+  Interface tactile &
+  Jetpack Compose &
+  Créer des écrans tactiles modernes avec peu de code boilerplate. \\
+  Base locale &
+  Room / SQLite &
+  Enregistrer articles, commandes, lignes, paiements et historiques localement. \\
+  Configuration simple &
+  DataStore &
+  Stocker les paramètres légers : nom du restaurant, préférences, imprimante. \\
+  Tickets et sauvegardes &
+  JSON &
+  Figer le contenu d'un ticket et exporter une sauvegarde lisible. \\
+  Exports tableur &
+  CSV &
+  Fournir un format simple à ouvrir pour le responsable ou le comptable. \\
+  Impression &
+  SDK fabricant ou ESC/POS &
+  Imprimer sur imprimante intégrée, Bluetooth, USB ou réseau après test réel. \\
+  Build &
+  Android Studio / Gradle &
+  Compiler et générer l'APK. \\
+  Tests &
+  JUnit &
+  Tester les calculs de panier, TVA, paiement mixte et rendu monnaie. \\
+  Versioning &
+  Git &
+  Suivre les changements et sécuriser les livraisons. \\
+  \bottomrule
+\end{tabularx}
+\rowcolors{2}{}{}
+
+\vspace{5pt}
+\textbf{Règle métier importante :} les montants sont stockés en centimes sous forme d'entiers,
+par exemple \texttt{1850} pour 18,50 euros.
+
+\section{Pourquoi cette stack est plus simple}
+
+\rowcolors{2}{softgray}{white}
+\begin{tabularx}{\textwidth}{L{4.5cm} Y Y}
+  \toprule
+  \rowcolor{primary}
+  \color{white}\textbf{Critère} &
+  \color{white}\textbf{APK Android native} &
+  \color{white}\textbf{Electron / React interne} \\
+  \midrule
+  Installation client &
+  Un APK à installer sur l'appareil &
+  Application desktop Windows à empaqueter \\
+  Matériel cible &
+  Tablette ou terminal Android POS &
+  Terminal Windows ou PC tactile \\
+  Nombre de briques &
+  Kotlin, Compose, Room &
+  Electron, React, TypeScript, Vite, SQLite \\
+  Coût matériel possible &
+  Plus bas avec tablette Android simple &
+  Souvent plus élevé sur tablette ou POS Windows \\
+  Logique offline &
+  Naturelle avec base locale sur l'appareil &
+  Possible aussi, mais architecture plus riche \\
+  \bottomrule
+\end{tabularx}
+\rowcolors{2}{}{}
+
+\section{Périmètre fonctionnel simple}
+
+\begin{itemize}
+  \item catalogue d'articles et catégories ;
+  \item panier et type de commande : sur place, à emporter, livraison ;
+  \item paiements : espèces, carte confirmée manuellement, titres-restaurant, autre ;
+  \item paiement mixte et rendu monnaie ;
+  \item génération d'une note client ;
+  \item historique des encaissements ;
+  \item annulation ou correction traçable ;
+  \item statistiques journalières simples ;
+  \item export \texttt{JSON} et \texttt{CSV}.
+\end{itemize}
+
+\section{Points à valider avant chiffrage}
+
+\begin{itemize}
+  \item Le client possède-t-il déjà une tablette Android ou un terminal POS Android ?
+  \item L'imprimante est-elle intégrée au terminal ou externe ?
+  \item L'impression doit-elle passer par Bluetooth, USB, réseau ou SDK fabricant ?
+  \item Le TPE bancaire reste-t-il autonome avec confirmation manuelle dans l'application ?
+  \item L'installation de l'APK hors Play Store est-elle acceptée sur le matériel retenu ?
+\end{itemize}
+
+\begin{tcolorbox}[
+  colback=softblue,
+  colframe=secondary,
+  boxrule=0.55pt,
+  arc=2pt,
+  left=8pt,right=8pt,top=6pt,bottom=6pt
+]
+\textbf{Point critique}\\
+Le vrai risque de cette stack n'est pas Kotlin : c'est l'impression. Le choix final du terminal
+doit donc être validé avec un test d'impression réel avant de promettre une livraison stable.
+\end{tcolorbox}
+
+\section{Plan d'action court}
+
+\begin{enumerate}
+  \item Créer le projet Android Kotlin dans Android Studio.
+  \item Construire les premiers écrans Compose : accueil, catalogue, panier.
+  \item Ajouter Room / SQLite : articles, commandes, lignes et paiements.
+  \item Implémenter les calculs : total TTC, paiements mixtes, rendu monnaie.
+  \item Générer un ticket JSON figé à chaque encaissement.
+  \item Ajouter historique, correction et annulation traçable.
+  \item Ajouter exports JSON et CSV.
+  \item Tester l'impression sur le terminal ou l'imprimante retenue.
+  \item Générer l'APK et tester l'installation sur l'appareil client.
+  \item Réaliser une recette courte avec quelques scénarios d'encaissement.
+\end{enumerate}
+
+\section{Sources officielles}
+
+{\footnotesize
+\begin{itemize}[itemsep=0pt,topsep=0pt,leftmargin=4mm]
+  \item Android Kotlin et Jetpack Compose :
+  \source{documentation Android}{https://developer.android.com/jetpack/compose/kotlin}
+  \item Jetpack Compose :
+  \source{documentation Android}{https://developer.android.com/compose}
+  \item Room / SQLite :
+  \source{documentation Android}{https://developer.android.com/codelabs/basic-android-kotlin-compose-persisting-data-room}
+  \item DataStore :
+  \source{documentation Android}{https://developer.android.com/datastore}
+\end{itemize}
+}
+
+\vfill
+{\small\color{textgray}
+Document de travail. Cette stack vise une version plus simple et moins coûteuse pour un client
+précis. Les choix d'impression, de terminal et d'installation doivent être validés sur matériel réel.
+}
+
+\end{document}

@@ -1,0 +1,576 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[a4paper,margin=1.65cm,top=1.45cm,bottom=1.55cm]{geometry}
+\usepackage{fontspec}
+\usepackage[french]{babel}
+\usepackage{microtype}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{ragged2e}
+\usepackage[table]{xcolor}
+\usepackage{enumitem}
+\usepackage{multicol}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage[most]{tcolorbox}
+\usepackage{hyperref}
+\usepackage{xurl}
+
+\setmainfont{Arial}
+\setsansfont{Arial}
+\renewcommand{\familydefault}{\sfdefault}
+
+\definecolor{primary}{HTML}{17365D}
+\definecolor{secondary}{HTML}{2F75B5}
+\definecolor{softblue}{HTML}{EAF3F8}
+\definecolor{softgray}{HTML}{F3F5F7}
+\definecolor{linegray}{HTML}{D5DCE3}
+\definecolor{textgray}{HTML}{4C5967}
+\definecolor{softgreen}{HTML}{EAF5EE}
+\definecolor{softyellow}{HTML}{FFF7E6}
+\definecolor{warning}{HTML}{A15C00}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=primary,
+  urlcolor=secondary,
+  pdftitle={Architecture offline-first et deux stacks simples - logiciel de caisse},
+  pdfauthor={AMH Solution}
+}
+\urlstyle{same}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\renewcommand{\arraystretch}{1.24}
+\setlist[itemize]{leftmargin=5mm,itemsep=1.5pt,topsep=2pt}
+\setlist[enumerate]{leftmargin=6mm,itemsep=1.5pt,topsep=2pt}
+
+\titleformat{\section}
+  {\Large\bfseries\color{primary}}
+  {\thesection.}{0.45em}{}
+\titlespacing*{\section}{0pt}{10pt}{4pt}
+
+\titleformat{\subsection}
+  {\normalsize\bfseries\color{secondary}}
+  {}{0pt}{}
+\titlespacing*{\subsection}{0pt}{7pt}{3pt}
+
+\pagestyle{fancy}
+\setlength{\headheight}{22pt}
+\fancyhf{}
+\fancyhead[L]{\small\color{textgray}AMH Solution --- logiciel de caisse}
+\fancyhead[R]{\small\color{textgray}Proposition technique V1}
+\fancyfoot[C]{\small\color{textgray}\thepage}
+\renewcommand{\headrulewidth}{0.35pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{linegray}\leaders\hrule height \headrulewidth\hfill}}
+
+\newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\Centering\arraybackslash}p{#1}}
+
+\newcommand{\yes}{\textbf{\color{primary}Oui}}
+\newcommand{\later}{\textbf{\color{textgray}Plus tard}}
+\newcommand{\source}[2]{\href{#2}{#1}}
+
+\begin{document}
+
+\begin{center}
+  {\fontsize{22}{26}\selectfont\bfseries\color{primary}
+  Architecture offline-first et deux stacks simples}\\[3pt]
+  {\large Logiciel de caisse pour restaurant}\\[7pt]
+  {\small\color{textgray}Note historique --- version 1 --- 2 juin 2026}
+\end{center}
+
+\begin{tcolorbox}[
+  colback=softyellow,
+  colframe=warning,
+  boxrule=0.8pt,
+  arc=2pt,
+  left=8pt,right=8pt,top=7pt,bottom=7pt
+]
+\textbf{\color{warning}Document remplacé pour la V1}\\
+Cette note comparait initialement des options desktop Windows. La décision du 5 juin 2026 retient
+désormais une application native \textbf{Android Kotlin / Jetpack Compose} livrée sous forme
+d'\textbf{APK} pour tablette Android ou terminal POS Android. Ce document reste conservé comme
+trace de réflexion, mais il n'est plus la référence de développement de la V1.
+\end{tcolorbox}
+
+\begin{tcolorbox}[
+  colback=softgreen,
+  colframe=primary,
+  boxrule=0.8pt,
+  arc=2pt,
+  left=8pt,right=8pt,top=7pt,bottom=7pt
+]
+\textbf{\color{primary}Recommandation principale}\\
+Retenir un \textbf{client épais local} sur un \textbf{POS ou une tablette Windows} et comparer
+deux solutions.
+Pour livrer une première version exploitable avec le moins de complexité, privilégier
+\textbf{Python + PySide6 + SQLite}. Conserver \textbf{Electron + React + TypeScript + SQLite}
+comme alternative si l'apprentissage d'une application desktop basée sur les technologies web
+est prioritaire. Dans les deux cas, une vente reste possible sans Internet.
+\end{tcolorbox}
+
+\section{Objectif et principe}
+
+Le logiciel doit rester simple à développer, installer et maintenir. La première version suit un
+principe \textbf{offline-first} : elle fonctionne sans connexion Internet sur un seul appareil
+Windows. L'objectif du stage est aussi de progresser en logique métier, en SQL et, selon la stack
+retenue, en Python ou en TypeScript.
+
+\begin{itemize}
+  \item Une vente est enregistrée dans SQLite sur la caisse avant toute synchronisation éventuelle.
+  \item Le logiciel doit continuer à fonctionner si Internet est indisponible.
+  \item Une sauvegarde manuelle ou planifiée doit pouvoir être exportée sur un autre support.
+  \item Le choix du matériel sera fixé après un test réel d'impression.
+\end{itemize}
+
+\begin{tcolorbox}[
+  colback=softblue,
+  colframe=secondary,
+  boxrule=0.55pt,
+  arc=2pt,
+  left=8pt,right=8pt,top=6pt,bottom=6pt
+]
+\textbf{Pourquoi cibler Windows dans la première version ?}\\
+Python s'exécute et se transforme simplement en application installable sur Windows. Sur Android
+ou iPadOS, intégrer Python dans une application locale ajoute des difficultés qui n'apportent pas
+de valeur au premier prototype. Mieux vaut réussir un produit simple sur un OS avant d'envisager
+un portage.
+\end{tcolorbox}
+
+\section{Deux stacks techniques minimalistes}
+
+Les deux propositions ciblent Windows et partagent la même base : \textbf{SQLite} comme source de
+vérité, \textbf{JSON} pour les tickets figés, \textbf{CSV} pour les exports et \textbf{Git} pour le
+suivi du code. Les montants sont stockés en centimes sous forme d'entiers, par exemple
+\texttt{1850} pour 18,50 euros.
+
+\subsection{Option A --- application desktop Python : choix recommandé}
+
+\rowcolors{2}{softgray}{white}
+\begin{tabularx}{\textwidth}{L{3.15cm} L{3.15cm} Y}
+  \toprule
+  \rowcolor{primary}
+  \color{white}\textbf{Besoin} &
+  \color{white}\textbf{Choix} &
+  \color{white}\textbf{Rôle} \\
+  \midrule
+  Logique métier &
+  \textbf{Python} &
+  Écrire les règles essentielles : panier, paiements, historique et statistiques simples. \\
+  Interface tactile &
+  \textbf{PySide6} &
+  Construire une application desktop tactile avec Qt for Python. \\
+  Stockage local &
+  \textbf{SQLite} &
+  Enregistrer les données dans un fichier local, sans serveur à installer. \\
+  Tickets et sauvegardes &
+  \textbf{JSON, CSV} &
+  Figer les tickets et produire des exports lisibles. \\
+  Exécutable Windows &
+  \textbf{pyside6-deploy} &
+  Générer un exécutable Windows à partir de l'application Python. \\
+  Tests &
+  \textbf{pytest} &
+  Vérifier les calculs critiques et les annulations. \\
+  Impression &
+  SDK du fabricant &
+  Piloter l'imprimante après un test sur le matériel réel. \\
+  \bottomrule
+\end{tabularx}
+\rowcolors{2}{}{}
+
+\vspace{3pt}
+\textbf{Atout principal :} une seule base de code Python, sans API locale et sans build frontend.
+C'est le chemin le plus court pour obtenir une application installable et se concentrer sur la
+logique métier.
+
+\subsection{Option B --- application desktop Electron et React}
+
+\rowcolors{2}{softgray}{white}
+\begin{tabularx}{\textwidth}{L{3.15cm} L{3.15cm} Y}
+  \toprule
+  \rowcolor{primary}
+  \color{white}\textbf{Besoin} &
+  \color{white}\textbf{Choix} &
+  \color{white}\textbf{Rôle} \\
+  \midrule
+  Runtime desktop &
+  \textbf{Electron} &
+  Exécuter une application desktop locale qui embarque Chromium et Node.js. \\
+  Logique métier &
+  \textbf{TypeScript} &
+  Écrire les règles essentielles dans un langage typé. \\
+  Interface tactile &
+  \textbf{React, TypeScript, CSS} &
+  Construire des écrans tactiles structurés en composants réutilisables. \\
+  Build interface &
+  \textbf{Vite} &
+  Transformer l'interface React en fichiers statiques intégrés à l'application. \\
+  Données et matériel &
+  Processus principal Electron via \textbf{IPC} &
+  Relier l'interface à SQLite et aux fonctions natives du poste. \\
+  Stockage local &
+  \textbf{SQLite} &
+  Enregistrer les données dans un fichier local, sans serveur distant. \\
+  Tickets et sauvegardes &
+  \textbf{JSON, CSV} &
+  Figer les tickets et produire des exports lisibles. \\
+  Exécutable Windows &
+  \textbf{Electron Forge} &
+  Générer un exécutable ou un installateur Windows. \\
+  Tests &
+  \textbf{Vitest} &
+  Vérifier les calculs critiques et les annulations. \\
+  \bottomrule
+\end{tabularx}
+\rowcolors{2}{}{}
+
+\vspace{3pt}
+\textbf{Atout principal :} progresser en React et TypeScript dans une vraie application desktop.
+Electron permet de conserver une interface web moderne tout en accédant aux fonctions locales
+par IPC. Cette option reste raisonnable, mais comporte davantage de pièces à assembler.
+
+\subsection{Comparaison rapide}
+
+\rowcolors{2}{softgray}{white}
+\begin{tabularx}{\textwidth}{L{4.25cm} Y Y}
+  \toprule
+  \rowcolor{primary}
+  \color{white}\textbf{Critère} &
+  \color{white}\textbf{Option A --- PySide6} &
+  \color{white}\textbf{Option B --- Electron + React} \\
+  \midrule
+  Simplicité de développement &
+  \textbf{Très bonne} &
+  Bonne \\
+  Nombre de briques principales &
+  Python, PySide6, SQLite &
+  Electron, React, TypeScript, Vite, SQLite \\
+  Compétences travaillées &
+  Python, SQL, logique métier &
+  TypeScript, SQL, React, IPC, application desktop \\
+  Priorité &
+  \textbf{Livrer efficacement} &
+  Approfondir le desktop avec technologies web \\
+  \bottomrule
+\end{tabularx}
+\rowcolors{2}{}{}
+
+\section{Principe offline-first et évolution possible}
+
+Le site public de Splash présente une caisse connectée, un mode hors ligne fiable, des statistiques,
+un back-office, des bornes et un écran cuisine. Le détail de leur code n'est pas public. Le schéma
+ci-dessous est donc une \textbf{trajectoire prudente pour ce projet}, pas une description de leur
+implémentation interne.
+
+\rowcolors{2}{softgray}{white}
+\begin{tabularx}{\textwidth}{L{4.1cm} Y Y}
+  \toprule
+  \rowcolor{primary}
+  \color{white}\textbf{Sujet} &
+  \color{white}\textbf{Première version à livrer} &
+  \color{white}\textbf{Extension facultative ultérieure} \\
+  \midrule
+  Encaissement &
+  Application desktop et SQLite locale &
+  Identique : le cloud ne bloque jamais une vente \\
+  Données &
+  Catalogue, commandes et paiements locaux &
+  File de synchronisation envoyée quand Internet revient \\
+  Pilotage &
+  Historique et statistiques sur la caisse &
+  API centrale, base PostgreSQL et back-office web \\
+  Périphériques &
+  Imprimante et TPE testés sur le poste &
+  Borne ou écran cuisine ajoutés selon le besoin \\
+  \bottomrule
+\end{tabularx}
+\rowcolors{2}{}{}
+
+\vspace{4pt}
+\begin{tcolorbox}[
+  colback=softblue,
+  colframe=secondary,
+  boxrule=0.55pt,
+  arc=2pt,
+  left=8pt,right=8pt,top=6pt,bottom=6pt
+]
+\textbf{Place éventuelle de Next.js}\\
+Next.js peut devenir utile plus tard pour un back-office web consultable à distance. Il ne doit
+pas être l'unique runtime de la caisse au moment de l'encaissement.
+\end{tcolorbox}
+
+\section{Compatibilité selon le système}
+
+Les deux stacks proposées ciblent Windows. Les autres systèmes restent intéressants à comparer
+pour le matériel, mais demanderaient un autre choix technique si un portage devenait nécessaire.
+
+\rowcolors{2}{softgray}{white}
+\begin{tabularx}{\textwidth}{L{2.45cm} L{3.15cm} L{3.35cm} Y}
+  \toprule
+  \rowcolor{primary}
+  \color{white}\textbf{Système} &
+  \color{white}\textbf{Choix technique} &
+  \color{white}\textbf{Langages principaux} &
+  \color{white}\textbf{Remarque} \\
+  \midrule
+  Android / SUNMI OS &
+  Non retenu pour la V1 &
+  Kotlin ou JavaScript &
+  Bon matériel POS, mais Python local n'est pas le chemin le plus simple. \\
+  Windows 11 &
+  \textbf{Choix recommandé} &
+  Python ou TypeScript &
+  Simple à développer, empaqueter et tester ; compatible avec de nombreux périphériques USB. \\
+  iPadOS &
+  Non retenu pour la V1 &
+  Swift ou JavaScript &
+  Bon matériel, mais distribution et impression plus contraignantes pour cette première version. \\
+  \bottomrule
+\end{tabularx}
+\rowcolors{2}{}{}
+
+\section{Choix conseillé pour commencer}
+
+\begin{tcolorbox}[
+  colback=softblue,
+  colframe=secondary,
+  boxrule=0.55pt,
+  arc=2pt,
+  left=8pt,right=8pt,top=7pt,bottom=7pt
+]
+\textbf{\color{primary}Premier environnement à tester : un appareil Windows 11 disponible}\\
+Avant tout achat, construire le prototype desktop sur un ordinateur ou une tablette Windows déjà
+disponible. Tester ensuite le logiciel sur un terminal POS Windows, par exemple un SUNMI T3 PRO
+SUPER configuré sous Windows si cette version est disponible auprès du revendeur.
+\end{tcolorbox}
+
+\textbf{Pourquoi procéder ainsi :} le choix définitif du terminal dépend surtout de l'impression,
+du tiroir-caisse, du prix et de la disponibilité. Le prototype peut avancer sans attendre cet achat.
+
+\section{Plan d'action détaillé}
+
+L'objectif est de valider chaque bloc avant de passer au suivant. Ce plan donne un ordre de travail,
+pas un calendrier figé.
+
+\begin{enumerate}
+  \item \textbf{Valider les décisions de départ.}\\
+  Choisir l'option A ou B avec le maître de stage, préciser les moyens de paiement, les taux de TVA,
+  le besoin d'impression et le matériel déjà disponible. \textbf{Résultat :} une décision technique
+  courte et les questions client prioritaires.
+
+  \item \textbf{Créer le socle de l'application desktop.}\\
+  Initialiser le dépôt Git, l'arborescence, la configuration et un premier écran tactile lançable.
+  \textbf{Résultat :} une application vide mais installable en développement.
+
+  \item \textbf{Modéliser les données locales.}\\
+  Créer SQLite avec articles, catégories, commandes, lignes de commande, paiements, utilisateurs
+  et identifiants stables. Stocker les montants en centimes. \textbf{Résultat :} un schéma versionné
+  et quelques données de démonstration.
+
+  \item \textbf{Développer catalogue, panier et commandes.}\\
+  Ajouter les articles au panier, modifier les quantités et distinguer sur place, à emporter et
+  livraison. \textbf{Résultat :} une commande complète peut être préparée avant encaissement.
+
+  \item \textbf{Implémenter les encaissements.}\\
+  Gérer espèces, carte, titres-restaurant, autres moyens, paiement mixte et rendu de monnaie.
+  \textbf{Résultat :} les calculs critiques sont couverts par des tests automatisés.
+
+  \item \textbf{Ajouter la traçabilité.}\\
+  Figer un instantané JSON à l'encaissement, conserver l'opérateur et l'horodatage, puis traiter
+  une correction ou une annulation comme une nouvelle opération liée. \textbf{Résultat :} aucune
+  vente validée n'est modifiée silencieusement.
+
+  \item \textbf{Construire l'historique et les statistiques simples.}\\
+  Rechercher les ventes et afficher chiffre d'affaires, volume de transactions, répartition des
+  paiements et totaux journaliers. \textbf{Résultat :} le responsable dispose d'un premier tableau
+  de bord local.
+
+  \item \textbf{Tester l'impression et les périphériques.}\\
+  Imprimer une note sur le matériel réel, gérer l'échec d'impression et valider le besoin de
+  tiroir-caisse. \textbf{Résultat :} un compte rendu matériel avant achat définitif.
+
+  \item \textbf{Ajouter sauvegarde, restauration et livraison Windows.}\\
+  Exporter JSON et CSV, tester la restauration, puis générer l'exécutable ou l'installateur.
+  \textbf{Résultat :} une version démontrable hors ligne sur un poste Windows distinct.
+
+  \item \textbf{Réaliser la recette et la mise en service.}\\
+  Jouer les parcours essentiels avec le client, corriger les défauts bloquants, rédiger un guide
+  court et former les utilisateurs. \textbf{Résultat :} une première version exploitable validée.
+\end{enumerate}
+
+\section{Décisions à prendre avant achat}
+
+\begin{itemize}
+  \item La caisse reste-t-elle fixée au comptoir ou doit-elle être déplacée en salle ?
+  \item Une imprimante ticket 80 mm intégrée est-elle souhaitée ?
+  \item Faut-il ouvrir automatiquement un tiroir-caisse ?
+  \item Une imprimante cuisine est-elle nécessaire dès la première version ?
+  \item Quel budget matériel est prévu ?
+  \item Le client possède-t-il déjà une tablette ou un terminal réutilisable ?
+\end{itemize}
+
+\clearpage
+\section{Comparaison du matériel et ordre de prix}
+
+Les modèles ci-dessous sont des pistes de comparaison, pas une commande d'achat. Les prix sont des
+\textbf{ordres de grandeur TTC relevés le 2 juin 2026}, hors accessoires et hors promotions
+temporaires lorsqu'elles sont identifiables. Ils doivent être revérifiés avant achat. Pour un
+terminal professionnel sans tarif public stable en France, il faut demander un devis au revendeur.
+
+\subsection{Android et terminaux POS Android}
+
+\rowcolors{2}{softgray}{white}
+\begin{tabularx}{\textwidth}{L{3.2cm} L{2.45cm} Y L{3.35cm}}
+  \toprule
+  \rowcolor{primary}
+  \color{white}\textbf{Modèle} &
+  \color{white}\textbf{Prix indicatif} &
+  \color{white}\textbf{Intérêt} &
+  \color{white}\textbf{Vigilance} \\
+  \midrule
+  Samsung Galaxy Tab A9+ &
+  Environ 250 à 350 EUR &
+  Tablette 11 pouces économique avec imprimante externe. &
+  Prévoir support, alimentation continue et imprimante réseau. \\
+  Samsung Galaxy Tab Active5 Pro Enterprise Edition &
+  Environ 600 à 850 EUR &
+  Tablette renforcée 10,1 pouces ; protection IP68 et batterie amovible. &
+  Plus coûteuse ; imprimante externe nécessaire. \\
+  SUNMI D3 MINI &
+  Environ 400 à 500 EUR &
+  POS Android compact 10,1 pouces avec imprimante thermique 80 mm intégrée. &
+  Ne correspond pas aux stacks Windows retenues pour la V1. \\
+  \bottomrule
+\end{tabularx}
+\rowcolors{2}{}{}
+
+\subsection{Windows}
+
+\rowcolors{2}{softgray}{white}
+\begin{tabularx}{\textwidth}{L{3.2cm} L{2.45cm} Y L{3.35cm}}
+  \toprule
+  \rowcolor{primary}
+  \color{white}\textbf{Modèle} &
+  \color{white}\textbf{Prix indicatif} &
+  \color{white}\textbf{Intérêt} &
+  \color{white}\textbf{Vigilance} \\
+  \midrule
+  Microsoft Surface Pro 12 ou 13 pouces &
+  Environ 1 000 à 1 600 EUR &
+  Tablette Windows polyvalente pour le développement et les essais. &
+  Ajouter support et imprimante ; vérifier les pilotes périphériques sur processeur ARM. \\
+  Lenovo ThinkPad X12 Detachable Gen 2 &
+  Environ 1 600 à 2 700 EUR &
+  Tablette Windows professionnelle 12 pouces avec clavier détachable. &
+  Robuste mais chère pour une caisse seule ; comparer avec un terminal POS dédié. \\
+  SUNMI T3 PRO SUPER &
+  Sur devis &
+  POS fixe dual-OS Windows ou Android, adapté à un comptoir. &
+  Valider la configuration Windows disponible, l'imprimante et les accessoires. \\
+  \bottomrule
+\end{tabularx}
+\rowcolors{2}{}{}
+
+\subsection{iPadOS}
+
+\rowcolors{2}{softgray}{white}
+\begin{tabularx}{\textwidth}{L{3.2cm} L{2.45cm} Y L{3.35cm}}
+  \toprule
+  \rowcolor{primary}
+  \color{white}\textbf{Modèle} &
+  \color{white}\textbf{Prix indicatif} &
+  \color{white}\textbf{Intérêt} &
+  \color{white}\textbf{Vigilance} \\
+  \midrule
+  iPad 11 pouces (A16) &
+  Environ 400 à 650 EUR &
+  Option iPad la plus raisonnable pour une caisse simple. &
+  Prévoir support, alimentation et validation de l'impression. \\
+  iPad Air 11 pouces (M4) &
+  Environ 650 à 1 100 EUR &
+  Plus confortable si le client veut un appareil polyvalent. &
+  Plus puissant et plus cher que nécessaire pour la caisse seule. \\
+  iPad mini (A17 Pro) &
+  Environ 550 à 900 EUR &
+  Intéressant pour la mobilité ou la prise de commande en salle. &
+  Écran 8,3 pouces trop petit pour un comptoir fixe. \\
+  \bottomrule
+\end{tabularx}
+\rowcolors{2}{}{}
+
+\clearpage
+\section{Sources consultées}
+
+{\footnotesize
+\begin{multicols}{2}
+\begin{itemize}[itemsep=0pt,topsep=0pt,leftmargin=4mm]
+  \item Python \texttt{sqlite3} :
+  \source{documentation}{https://docs.python.org/3/library/sqlite3.html}
+  \item PySide6 :
+  \source{documentation}{https://doc.qt.io/qtforpython-6/gettingstarted.html}
+  \item \texttt{pyside6-deploy} :
+  \source{documentation}{https://doc.qt.io/qtforpython-6/deployment/deployment-pyside6-deploy.html}
+  \item Splash :
+  \source{site officiel}{https://splash360.fr/}
+  \item Electron :
+  \source{documentation}{https://www.electronjs.org/docs/latest/tutorial/tutorial-prerequisites}
+  \item Electron : processus principal et rendu :
+  \source{documentation}{https://www.electronjs.org/docs/latest/tutorial/process-model}
+  \item Electron Forge :
+  \source{documentation}{https://www.electronforge.io/}
+  \item React :
+  \source{documentation}{https://react.dev/learn/build-a-react-app-from-scratch}
+  \item Vite :
+  \source{documentation}{https://vite.dev/guide/}
+  \item Vitest :
+  \source{documentation}{https://vitest.dev/guide/}
+  \item Next.js :
+  \source{documentation}{https://nextjs.org/docs}
+  \item SQLite :
+  \source{présentation officielle}{https://sqlite.org/about.html}
+  \item Samsung Galaxy Tab A9+ :
+  \source{Samsung France}{https://www.samsung.com/fr/tablets/galaxy-tab-a/galaxy-tab-a9-plus-wifi-graphite-128gb-sm-x210nzaeeub/}
+  \item Prix Galaxy Tab A9+ :
+  \source{Fnac}{https://www.fnac.com/Tablette-Tactile-Samsung-Galaxy-Tab-A9-11-Wifi-128-Go-Anthracite/a21688745/w-4}
+  \item Galaxy Tab Active5 Pro :
+  \source{Samsung Professionnels France}{https://www.samsung.com/fr/business/tablets/galaxy-tab-active/galaxy-tab-active5-pro-enterprise-edition-sm-x356bzgaeeb/}
+  \item Prix Galaxy Tab Active5 Pro :
+  \source{Galaxus France}{https://www.galaxus.fr/fr/s1/product/samsung-galaxy-tab-active5-pro-edition-entreprise-5g-1010-128-go-vert-tablette-57860971}
+  \item SUNMI D3 MINI :
+  \source{fiche produit PDF}{https://file.cdn.sunmi.com/newebsite/products/d3-mini/specs/d3-mini-en.pdf}
+  \item Prix SUNMI D3 MINI :
+  \source{Shop NFC}{https://www.shopnfc.com/fr/terminaux-nfc-sunmi/679-sunmi-d3-mini-terminal-de-point-de-vente-android-gms-imprimante-80-mm-cable-ue.html}
+  \item SUNMI T3 PRO :
+  \source{SUNMI}{https://www.sunmi.com/en-US/t3-pro-series/}
+  \item Microsoft Surface Pro :
+  \source{Microsoft France}{https://www.microsoft.com/fr-fr/surface/devices/surface-pro/}
+  \item Prix Surface Pro :
+  \source{Microsoft Store France}{https://www.microsoft.com/fr-fr/store/collections/consumersurface/}
+  \item Lenovo ThinkPad X12 Detachable Gen 2 :
+  \source{Lenovo France}{https://www.lenovo.com/fr/fr/p/laptops/thinkpad/thinkpadx/lenovo-thinkpad-x12-gen-2-12-inch-intel/21lkcto1wwfr2}
+  \item Prix ThinkPad X12 Gen 2 :
+  \source{PcComponentes France}{https://www.pccomponentes.fr/portable-lenovo-thinkpad-x12-detachable-gen-2-123-intel-core-ultra-5-134u-16gb-512gb-ssd-intel-graphics-windows-11-pro}
+  \item Apple iPad 11 pouces (A16) :
+  \source{Apple}{https://www.apple.com/fr/ipad-11/}
+  \item Apple iPad Air :
+  \source{Apple}{https://www.apple.com/fr/ipad-air/}
+  \item Apple iPad mini (A17 Pro) :
+  \source{Apple}{https://support.apple.com/fr-fr/121456}
+  \item Prix des iPad :
+  \source{Apple Store France}{https://www.apple.com/fr/shop/buy-ipad}
+\end{itemize}
+\end{multicols}
+}
+
+\vfill
+{\small\color{textgray}
+Document de travail. Les modèles cités sont des candidats à tester. La décision d'achat dépend
+de la disponibilité en France, du prix obtenu auprès du revendeur et de la validation de
+l'impression sur le matériel réel.
+}
+
+\end{document}

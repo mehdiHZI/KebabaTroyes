@@ -1,0 +1,79 @@
+---
+description: Conventions Kotlin / Jetpack Compose pour android_app/
+globs: android_app/**/*
+alwaysApply: false
+---
+
+# Android — conventions AMH Caisse
+
+## Configuration
+
+| Élément | Valeur |
+| --- | --- |
+| `applicationId` | `com.amhsolution.caisse` |
+| `minSdk` | 26 |
+| `targetSdk` | 35 |
+| `compileSdk` | 36.1 |
+| UI | Jetpack Compose + Material 3 |
+
+## Structure packages (cible)
+
+```
+com.amhsolution.caisse/
+  MainActivity.kt          # Point d'entrée minimal
+  ui/home/                 # Écran d'accueil
+  ui/register/             # Écran caisse (à créer)
+  ui/theme/                # Couleurs, thème, typo
+  domain/                  # Modèles et logique métier (à créer)
+  data/                    # Room, DataStore (plus tard)
+```
+
+## Patterns Compose établis
+
+- `MainActivity` délègue l'UI à un Composable racine, pas de layout dans l'activité
+- Écrans **stateless** : état remonté par callback (`onActionSelected`, etc.)
+- Gros boutons tactiles (`HomeActionCard`) — hauteur fixe, coins arrondis, couleurs par intention (`ActionTone`)
+- Layout tablette (`TabletHomeLayout`) + variante compacte pour previews
+- Palette dans `ui/theme/Color.kt`, pas de couleurs en dur dispersées
+
+## Règles de code
+
+```kotlin
+// Montants : toujours en centimes (Long ou Int)
+data class LigneCommande(val prixUnitaireCentimes: Int, val quantite: Int)
+
+// ❌ Éviter
+val total = 18.50
+
+// ✅ Préférer
+val totalCentimes = 1850
+```
+
+- Logique métier (totaux, TVA, rendu monnaie) dans `domain/`, testable en JUnit
+- Pas de `Float` pour les montants
+- Navigation : `navigation-compose` quand plusieurs écrans seront reliés
+- ViewModels (`lifecycle-viewmodel-compose`) si l'état d'écran devient complexe
+
+## Dépendances à ajouter au bon moment
+
+| Dépendance | Quand |
+| --- | --- |
+| `navigation-compose` | Plusieurs écrans reliés |
+| `room` | Persistance après stabilisation métier |
+| `datastore` | Paramètres légers (nom restaurant, imprimante) |
+| `kotlinx-serialization-json` | Tickets et sauvegardes JSON |
+| SDK impression / ESC-POS | Après choix imprimante sur tablette réelle |
+
+## Design UI caisse
+
+- Interface tactile, lumineuse, gros boutons
+- Action principale (`Caisse`) visuellement dominante
+- Actions secondaires regroupées (historique, stats, prix, paramètres)
+- Badges contextuels : `Mode local`, `Session ouverte`
+- Tester sur tablette 11" (émulateur ou Lenovo Idea Tab branchée en USB)
+
+## Tests
+
+- Tests unitaires JUnit pour : totaux TTC, paiement mixte, rendu monnaie, annulation/correction
+- Tests instrumentés (Espresso/Compose) seulement si utile
+- Build APK debug pour test manuel sur tablette

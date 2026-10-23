@@ -2,19 +2,25 @@ import { asc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { categories, options, products } from "@/db/schema";
 import { seedCategories, seedOptions, seedProducts } from "@/db/seed-data";
+import { productImageSrc } from "@/lib/product-image";
+
+export type CatalogProduct = {
+  id: string;
+  name: string;
+  description: string | null;
+  priceCents: number;
+  hasPain: boolean;
+  hasFrites: boolean;
+  hasSauces: boolean;
+  hasCrudites: boolean;
+  hasSupplements: boolean;
+  imageUrl: string | null;
+};
 
 export type CatalogCategory = {
   id: string;
   name: string;
-  products: {
-    id: string;
-    name: string;
-    description: string | null;
-    priceCents: number;
-    hasPain: boolean;
-    hasSauces: boolean;
-    hasCrudites: boolean;
-  }[];
+  products: CatalogProduct[];
 };
 
 export type CatalogOption = {
@@ -23,6 +29,22 @@ export type CatalogOption = {
   name: string;
   priceCents: number;
 };
+
+function mapProductFlags(p: {
+  hasPain?: boolean | null;
+  hasFrites?: boolean | null;
+  hasSauces?: boolean | null;
+  hasCrudites?: boolean | null;
+  hasSupplements?: boolean | null;
+}) {
+  return {
+    hasPain: p.hasPain ?? false,
+    hasFrites: p.hasFrites ?? false,
+    hasSauces: p.hasSauces ?? false,
+    hasCrudites: p.hasCrudites ?? false,
+    hasSupplements: p.hasSupplements ?? false,
+  };
+}
 
 /** Fallback mémoire si la BDD n’est pas encore dispo (dev / premier boot). */
 function catalogFromSeed(): {
@@ -39,9 +61,8 @@ function catalogFromSeed(): {
         name: p.name,
         description: p.description ?? null,
         priceCents: p.priceCents,
-        hasPain: p.hasPain ?? false,
-        hasSauces: p.hasSauces ?? false,
-        hasCrudites: p.hasCrudites ?? false,
+        ...mapProductFlags(p),
+        imageUrl: productImageSrc(p.id),
       })),
   }));
 
@@ -96,9 +117,8 @@ export async function getCatalog(): Promise<{
             name: p.name,
             description: p.description,
             priceCents: p.priceCents,
-            hasPain: p.hasPain,
-            hasSauces: p.hasSauces,
-            hasCrudites: p.hasCrudites,
+            ...mapProductFlags(p),
+            imageUrl: p.imageUrl ?? productImageSrc(p.id),
           })),
       })),
       options: dbOptions.map((o) => ({

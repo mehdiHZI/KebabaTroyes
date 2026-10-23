@@ -1,7 +1,12 @@
 import "dotenv/config";
+import { notInArray } from "drizzle-orm";
 import { db } from "./index";
 import { categories, options, products } from "./schema";
 import { seedCategories, seedOptions, seedProducts } from "./seed-data";
+import { productImageSrc } from "../lib/product-image";
+
+const seedProductIds = seedProducts.map((p) => p.id);
+const seedOptionIds = seedOptions.map((o) => o.id);
 
 async function main() {
   console.log("Seeding catalogue Kebaba…");
@@ -17,6 +22,7 @@ async function main() {
   }
 
   for (const p of seedProducts) {
+    const imageUrl = productImageSrc(p.id);
     await db
       .insert(products)
       .values({
@@ -27,8 +33,11 @@ async function main() {
         priceCents: p.priceCents,
         sortOrder: p.sortOrder,
         hasPain: p.hasPain ?? false,
+        hasFrites: p.hasFrites ?? false,
         hasSauces: p.hasSauces ?? false,
         hasCrudites: p.hasCrudites ?? false,
+        hasSupplements: p.hasSupplements ?? false,
+        imageUrl,
         active: true,
         tvaRateBps: 1000,
       })
@@ -40,8 +49,11 @@ async function main() {
           priceCents: p.priceCents,
           sortOrder: p.sortOrder,
           hasPain: p.hasPain ?? false,
+          hasFrites: p.hasFrites ?? false,
           hasSauces: p.hasSauces ?? false,
           hasCrudites: p.hasCrudites ?? false,
+          hasSupplements: p.hasSupplements ?? false,
+          imageUrl,
         },
       });
   }
@@ -57,9 +69,20 @@ async function main() {
           name: o.name,
           priceCents: o.priceCents,
           sortOrder: o.sortOrder,
+          active: true,
         },
       });
   }
+
+  await db
+    .update(options)
+    .set({ active: false })
+    .where(notInArray(options.id, seedOptionIds));
+
+  await db
+    .update(products)
+    .set({ active: false })
+    .where(notInArray(products.id, seedProductIds));
 
   console.log(
     `OK — ${seedCategories.length} catégories, ${seedProducts.length} produits, ${seedOptions.length} options.`,

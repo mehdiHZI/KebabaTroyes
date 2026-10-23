@@ -1,0 +1,16 @@
+---
+description: Skills SEO toujours actifs — programmatic-seo, seo-audit, seo (web quality)
+alwaysApply: true
+---
+
+# SEO — skills généraux Kebaba
+
+Pour tout travail sur le site web / PWA (`click-collect/`, `kebaba.fr`, pages marketing, meta, sitemap, contenu SEO) :
+
+1. Lire et suivre le skill **`seo`** — [`.agents/skills/seo/SKILL.md`](../.agents/skills/seo/SKILL.md) (aussi `.cursor/skills/seo/`)
+2. Pour un audit / diagnostic ranking / technique — **`seo-audit`** — [`.agents/skills/seo-audit/SKILL.md`](../.agents/skills/seo-audit/SKILL.md)
+3. Pour des pages à l’échelle (villes, templates, pSEO) — **`programmatic-seo`** — [`.agents/skills/programmatic-seo/SKILL.md`](../.agents/skills/programmatic-seo/SKILL.md)
+
+Ces skills sont installés en projet **et** en global (`~/.agents/skills/`, `~/.cursor/skills/`).
+
+Priorité Kebaba : français, marque Kebaba Troyes, click & collect, pas de contenu thin / spam.

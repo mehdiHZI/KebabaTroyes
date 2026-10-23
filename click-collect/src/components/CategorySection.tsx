@@ -5,6 +5,7 @@ type Product = {
   name: string;
   priceCents: number;
   description: string | null;
+  imageUrl?: string | null;
 };
 
 type Props = {
@@ -18,7 +19,7 @@ export function CategorySection({ name, products }: Props) {
   return (
     <section className="space-y-4">
       <div className="kebaba-category-title">{name}</div>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {products.map((p) => (
           <ProductCard
             key={p.id}
@@ -26,6 +27,7 @@ export function CategorySection({ name, products }: Props) {
             name={p.name}
             priceCents={p.priceCents}
             description={p.description}
+            imageUrl={p.imageUrl}
           />
         ))}
       </div>

@@ -109,8 +109,11 @@ export const products = pgTable("products", {
   active: boolean("active").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),
   hasPain: boolean("has_pain").notNull().default(false),
+  hasFrites: boolean("has_frites").notNull().default(false),
   hasSauces: boolean("has_sauces").notNull().default(false),
   hasCrudites: boolean("has_crudites").notNull().default(false),
+  hasSupplements: boolean("has_supplements").notNull().default(false),
+  imageUrl: text("image_url"),
 });
 
 export const options = pgTable(

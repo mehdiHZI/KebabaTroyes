@@ -1,185 +1,301 @@
 ---
-description: Carte / catalogue produits Kebaba Troyes (prix TTC de référence)
+description: Carte / catalogue produits Kebaba Troyes (prix TTC — source PDF murale + étapes)
 alwaysApply: true
 ---
 
 # Carte Kebaba Troyes
 
-Source de vérité **métier** des articles « éléments seuls » communiqués pour le resto.  
-À utiliser pour catalogue caisse, borne, click & collect, IA téléphone, food cost / stock.
+Source de vérité **métier** des articles et options.  
+**Sources PDF** (dossier `photo kebaba/`) :
 
-- Prix indiqués = **TTC** (France). En code : stocker en **centimes** (ex. `8,00 €` → `800`).
-- Libellés : **garder les noms tels quels** (marque / carte), sauf correction orthographe explicitement demandée.
-- Ce fichier liste les **éléments seuls** et options (sauces, etc.) au fur et à mesure.
+1. `1M_50_JEAN_JAURÈS_MENU_KEBABA.pdf` — carte murale (produits + prix)
+2. `VRAI_ÉTAPES_VISUEL_KEBABA [Récupéré].pdf` — parcours personnalisation (pain → frites → garnitures → suppléments → sauces)
+
+À utiliser pour catalogue **caisse**, borne, click & collect, IA téléphone, food cost / stock.
+
+- Prix = **TTC** (France). En code : **centimes** (ex. `8,00 €` → `800`).
+- Libellés : **garder les noms tels quels** (carte), sauf correction orthographe demandée.
 - Marque UI : **Kebaba** — jamais MilanoGusto / pizza.
+- Si le menu change : mettre à jour **cette règle** en premier, puis seeds / code.
+- Ne **pas** inventer de produits ou prix hors de cette carte.
 
 ## TVA (à confirmer comptablement)
 
-Orientation resto restauration sur place / emporter — **ne pas figer les taux dans le code sans validation**. En attendant : prévoir le champ `tvaRate` par article (souvent 10 % restauration ; boissons / cas particuliers peuvent différer).
+Ne pas figer les taux sans validation. Prévoir `tvaRate` / `tvaRateBps` par article (souvent 10 % restauration ; boissons / cas particuliers peuvent différer).
 
-## Catalogue
+## Logique « seul » vs « menu »
 
-### Kebaba Klassik
+| Famille | Seul | Menu |
+|---------|------|------|
+| Klassik | 8,00 € | 10,00 € |
+| 'Dwich (hors Adana) | 9,50 € | 12,50 € |
+| Adana | 10,50 € | 13,50 € |
+| Kréations | 11,00 € | 14,00 € |
+| Takos | selon nb viandes | **+3,00 €** sur le prix seul |
+| Bowls / Assiettes | prix plat | Boisson **+1,00 €** |
 
-| Article | Prix TTC | Centimes |
-|---------|----------|----------|
-| Kebaba Klassik | 8,00 € | 800 |
+En code : `priceCents` = prix **seul** ; `menuPriceCents` = prix **menu** quand applicable.
 
-### Kebaba Spéciaux
+## Catalogue produits
 
-| Article | Prix TTC | Centimes |
-|---------|----------|----------|
-| Monster | 10,50 € | 1050 |
-| Chèvre Miel | 10,50 € | 1050 |
-| Cheezy Jalapanos | 10,50 € | 1050 |
-| Boursin Lardon | 10,50 € | 1050 |
-| Avocado Fromage Frais | 10,50 € | 1050 |
+### Kebaba Klassik — `categoryId: klassik`
 
-### Kebaba 'Dwich
+Pain frais de Momo **ou** dürüm. Viande kebab, crudités, sauce au choix.
 
-| Article | Prix TTC | Centimes |
-|---------|----------|----------|
-| Adana | 8,00 € | 800 |
-| Kofte | 8,00 € | 800 |
-| Poulet Curry | 8,00 € | 800 |
-| Vege | 8,00 € | 800 |
-| Sucuk | 8,00 € | 800 |
-| Ricain | 8,00 € | 800 |
+| Article | Seul | Menu | Centimes seul / menu | `productId` |
+|---------|------|------|----------------------|-------------|
+| Kebaba Klassik | 8,00 € | 10,00 € | 800 / 1000 | `kebaba-klassik` |
 
-### Menus Enfants
+### Kebaba 'Dwich — `categoryId: dwich`
 
-| Article | Prix TTC | Centimes |
-|---------|----------|----------|
-| Menu Enfant | 7,00 € | 700 |
+Pain frais de Momo **ou** dürüm.
 
-### Kebaba Assiettes
+| Article | Seul | Menu | Centimes | `productId` |
+|---------|------|------|----------|-------------|
+| Kofte | 9,50 € | 12,50 € | 950 / 1250 | `kofte` |
+| Poulet | 9,50 € | 12,50 € | 950 / 1250 | `poulet` |
+| Végé | 9,50 € | 12,50 € | 950 / 1250 | `vege` |
+| Ricain | 9,50 € | 12,50 € | 950 / 1250 | `ricain` |
+| Sucuk | 9,50 € | 12,50 € | 950 / 1250 | `sucuk` |
+| Adana | 10,50 € | 13,50 € | 1050 / 1350 | `adana` |
 
-| Article | Prix TTC | Centimes |
-|---------|----------|----------|
-| Assiette Klassik | 14,00 € | 1400 |
-| Assiette Poulet | 14,00 € | 1400 |
-| Assiette Kofte | 14,00 € | 1400 |
-| Assiette Vege | 12,00 € | 1200 |
-| Assiette Ricain | 14,00 € | 1400 |
-| Assiette Adana | 14,00 € | 1400 |
-| Assiette Sucuk | 14,00 € | 1400 |
-| Assiette Royal Kebaba | 17,00 € | 1700 |
+### Kebaba Kréations — `categoryId: kreations`
 
-### Tex-Mex
+Pain frais de Momo **ou** dürüm. Ancien id `speciaux` → **`kreations`**.
 
-| Article | Prix TTC | Centimes |
-|---------|----------|----------|
-| Chicken Wings | 4,90 € | 490 |
-| Tenders | 4,90 € | 490 |
-| Mozza Stick | 4,90 € | 490 |
-| Nuggets | 4,90 € | 490 |
-| Tex Mex Mix | 10,90 € | 1090 |
+| Article | Seul | Menu | Centimes | `productId` |
+|---------|------|------|----------|-------------|
+| Krousty | 11,00 € | 14,00 € | 1100 / 1400 | `krousty` |
+| Avocado Fromage Frais | 11,00 € | 14,00 € | 1100 / 1400 | `avocado-fromage-frais` |
+| Cheezy Jalapanos | 11,00 € | 14,00 € | 1100 / 1400 | `cheezy-jalapanos` |
+| Boursin Lardons | 11,00 € | 14,00 € | 1100 / 1400 | `boursin-lardons` |
+| Monster | 11,00 € | 14,00 € | 1100 / 1400 | `monster` |
+| Chèvre-Miel | 11,00 € | 14,00 € | 1100 / 1400 | `chevre-miel` |
 
-### Barquettes
+### Kebaba Assiettes — `categoryId: assiettes`
 
-| Article | Prix TTC | Centimes |
-|---------|----------|----------|
-| Barquette de Frite + Kebab | 5,00 € | 500 |
-| Barquette de Viande Kebab | 6,00 € | 600 |
-| Barquette de Frite | 3,50 € | 350 |
+Pain frais, boulgour maison, frites, crudités. Upsell boisson **+1,00 €**.
 
-### Desserts
+| Article | Prix TTC | Centimes | `productId` |
+|---------|----------|----------|-------------|
+| Assiette Klassik | 15,00 € | 1500 | `assiette-klassik` |
+| Assiette Poulet | 15,00 € | 1500 | `assiette-poulet` |
+| Assiette Kofte | 15,00 € | 1500 | `assiette-kofte` |
+| Assiette Végé | 14,00 € | 1400 | `assiette-vege` |
+| Assiette Ricain | 15,00 € | 1500 | `assiette-ricain` |
+| Assiette Adana | 17,00 € | 1700 | `assiette-adana` |
+| Assiette Sucuk | 15,00 € | 1500 | `assiette-sucuk` |
+| Assiette Royal | 19,00 € | 1900 | `assiette-royal` |
 
-| Article | Prix TTC | Centimes |
-|---------|----------|----------|
-| Tiramisu | 4,50 € | 450 |
+### Kebaba Bowls — `categoryId: bowls`
 
-### Sauces (options)
+Upsell boisson **+1,00 €**.
 
-Pas de prix sur la carte source → traitées comme **options à 0 €** tant qu’un supplément n’est pas défini.  
-En caisse : sélection multi-sauces possible selon règles produit (à préciser : nombre max, obligatoires ou non).
+| Article | Prix TTC | Centimes | `productId` |
+|---------|----------|----------|-------------|
+| Bowl Klassik | 12,00 € | 1200 | `bowl-klassik` |
+| Bowl Chèvre-Miel | 13,50 € | 1350 | `bowl-chevre-miel` |
+| Bowl Cheezy Jalapanos | 13,50 € | 1350 | `bowl-cheezy-jalapanos` |
+| Bowl Boursin Lardons | 13,50 € | 1350 | `bowl-boursin-lardons` |
+| Bowl Avocado Fromage Frais | 13,50 € | 1350 | `bowl-avocado-fromage-frais` |
 
-| Sauce | Prix TTC | Centimes | `optionId` |
-|-------|----------|----------|------------|
-| Blanche Maison | 0,00 € | 0 | `blanche-maison` |
-| Ketchup | 0,00 € | 0 | `ketchup` |
-| Mayo | 0,00 € | 0 | `mayo` |
-| Andalouse | 0,00 € | 0 | `andalouse` |
-| Samouraï | 0,00 € | 0 | `samourai` |
-| Algérienne | 0,00 € | 0 | `algerienne` |
-| BBQ | 0,00 € | 0 | `bbq` |
-| Biggy | 0,00 € | 0 | `biggy` |
-| Moutarde | 0,00 € | 0 | `moutarde` |
-| Harissa | 0,00 € | 0 | `harissa` |
-| Brazil | 0,00 € | 0 | `brazil` |
-| Curry | 0,00 € | 0 | `curry` |
-| Poivre Vert | 0,00 € | 0 | `poivre-vert` |
+### Takos — `categoryId: takos`
 
-### Pains (options)
+Viandes au choix : kebab, poulet mariné, steak, nuggets, tenders, cordon bleu, falafel.  
+Menu = prix seul **+3,00 €**.
 
-Deux types disponibles — **pas de surcoût** indiqué → prix **0 €** tant qu’un écart n’est pas défini.  
-Choix **unique** par produit concerné (Klassik, Spéciaux, 'Dwich, etc. — mapping exact à préciser).
+| Article | Seul | Menu | Centimes | `productId` |
+|---------|------|------|----------|-------------|
+| Takos 1 viande | 8,00 € | 11,00 € | 800 / 1100 | `takos-1-viande` |
+| Takos 2 viandes | 10,00 € | 13,00 € | 1000 / 1300 | `takos-2-viandes` |
+| Takos 3 viandes | 12,00 € | 15,00 € | 1200 / 1500 | `takos-3-viandes` |
 
-| Pain | Prix TTC | Centimes | `optionId` |
-|------|----------|----------|------------|
-| Durum | 0,00 € | 0 | `durum` |
-| Pain frais | 0,00 € | 0 | `pain-frais` |
+### Menus — `categoryId: menus`
 
-### Crudités (options)
+| Article | Prix TTC | Centimes | `productId` | Notes |
+|---------|----------|----------|-------------|-------|
+| Menu Étudiant | 8,00 € | 800 | `menu-etudiant` | Uniquement **11h–14h** |
+| Menu Enfant | 7,00 € | 700 | `menu-enfant` | Viande kebab **ou** nuggets ×4 ; Capri-Sun + pom’pote |
 
-Libellé UI : **Crudité au choix**.  
-Règle : **entre 1 et 4 choix obligatoires**. Prix **0 €**.
+### P'tit + — `categoryId: ptit-plus`
 
-| Option | Prix TTC | Centimes | `optionId` | Notes |
-|--------|----------|----------|------------|-------|
-| Salade | 0,00 € | 0 | `salade` | Ingrédient |
-| Tomates | 0,00 € | 0 | `tomates` | Ingrédient |
-| Oignon Rouge | 0,00 € | 0 | `oignon-rouge` | Ingrédient |
-| Choux Rouge | 0,00 € | 0 | `choux-rouge` | Ingrédient |
-| Sans les crudités | 0,00 € | 0 | `sans-crudites` | Choix exclusif : aucune crudité |
-| Complet | 0,00 € | 0 | `complet` | Raccourci : les 4 ingrédients (salade, tomates, oignon rouge, choux rouge) |
+| Article | Prix TTC | Centimes | `productId` |
+|---------|----------|----------|-------------|
+| Chicken Wings ×4 | 6,90 € | 690 | `chicken-wings-x4` |
+| Chicken Wings ×8 | 9,90 € | 990 | `chicken-wings-x8` |
+| Tenders ×4 | 6,90 € | 690 | `tenders-x4` |
+| Tenders ×8 | 9,90 € | 990 | `tenders-x8` |
+| Camembert ×4 | 1,90 € | 190 | `camembert-x4` |
+| Camembert ×8 | 2,90 € | 290 | `camembert-x8` |
+| Oignon Rings ×4 | 1,90 € | 190 | `oignon-rings-x4` |
+| Oignon Rings ×8 | 2,90 € | 290 | `oignon-rings-x8` |
+| Mozza Sticks ×4 | 3,90 € | 390 | `mozza-sticks-x4` |
+| Mozza Sticks ×8 | 6,90 € | 690 | `mozza-sticks-x8` |
+| Nuggets ×4 | 3,90 € | 390 | `nuggets-x4` |
+| Nuggets ×8 | 6,90 € | 690 | `nuggets-x8` |
+| Jalapenos Cheezy ×4 | 3,90 € | 390 | `jalapenos-cheezy-x4` |
+| Jalapenos Cheezy ×8 | 6,90 € | 690 | `jalapenos-cheezy-x8` |
 
-Comportement caisse / borne (à implémenter) :
+### Barquettes — `categoryId: barquettes`
 
-- Au moins **1** et au plus **4** sélections dans ce groupe.
-- `sans-crudites` : exclusif — décoche les autres ; les autres décochent `sans-crudites`.
-- `complet` : sélectionne les 4 ingrédients (ou équivalent) ; incompatible avec `sans-crudites`.
-- Sur quels produits (Klassik, Spéciaux, 'Dwich, assiettes…) : **à préciser** si ce n’est pas partout.
+| Article | Prix TTC | Centimes | `productId` |
+|---------|----------|----------|-------------|
+| Barquette Kebab + Frites petite | 5,00 € | 500 | `barquette-kebab-frites-petite` |
+| Barquette Kebab + Frites grande | 7,00 € | 700 | `barquette-kebab-frites-grande` |
+| Barquette Viande de Kebab petite | 6,00 € | 600 | `barquette-viande-kebab-petite` |
+| Barquette Viande de Kebab grande | 9,00 € | 900 | `barquette-viande-kebab-grande` |
 
-### Boissons
+### Accompagnements (frites / boulgour) — `categoryId: frites`
 
-Articles vendables seuls. Prix unitaire : **2,00 €** TTC (tous formats listés).
+Vendables **seuls** (carte P'tit +).
 
-| Article | Volume | Prix TTC | Centimes | `productId` |
-|---------|--------|----------|----------|-------------|
-| Coca Cola Cherry | 33 cl | 2,00 € | 200 | `coca-cola-cherry-33` |
-| Coca Cola | 33 cl | 2,00 € | 200 | `coca-cola-33` |
-| Oasis Pomme Cassis Framboise | 33 cl | 2,00 € | 200 | `oasis-pomme-cassis-framboise-33` |
-| Oasis tropical | 33 cl | 2,00 € | 200 | `oasis-tropical-33` |
-| Fanta orange | 33 cl | 2,00 € | 200 | `fanta-orange-33` |
-| Tropico orange ananas | 33 cl | 2,00 € | 200 | `tropico-orange-ananas-33` |
-| Perrier | 33 cl | 2,00 € | 200 | `perrier-33` |
-| Lipton ice tea pêche | 33 cl | 2,00 € | 200 | `lipton-ice-tea-peche-33` |
-| Orangina | 33 cl | 2,00 € | 200 | `orangina-33` |
-| Ayran | 25 cl | 2,00 € | 200 | `ayran-25` |
-| Eau | 50 cl | 2,00 € | 200 | `eau-50` |
+| Article | Prix TTC | Centimes | `productId` |
+|---------|----------|----------|-------------|
+| Frites petite | 3,50 € | 350 | `frites-petite` |
+| Frites grande | 5,00 € | 500 | `frites-grande` |
+| Boulgour petite | 3,50 € | 350 | `boulgour-petite` |
+| Boulgour grande | 5,00 € | 500 | `boulgour-grande` |
+
+Variantes cheddar **en étape menu** (voir options) — pas des SKU séparés obligatoires. Si vendues seules en upsell, prix = base petite + surcoût étape :
+
+| Variante | Calcul | Centimes | `productId` (upsell) |
+|----------|--------|----------|----------------------|
+| Frites Cheddar | 3,50 + 1,50 | 500 | `frites-cheddar` |
+| Frites Cheddar Oignon Frit | 3,50 + 2,00 | 550 | `frites-cheddar-oignon-frit` |
+| Frites Cheddar Bacon | 3,50 + 2,50 | 600 | `frites-cheddar-bacon` |
+
+### Côté sucré — `categoryId: desserts`
+
+| Article | Prix TTC | Centimes | `productId` |
+|---------|----------|----------|-------------|
+| Tarte Daim | 3,50 € | 350 | `tarte-daim` |
+| Tiramisu | 4,00 € | 400 | `tiramisu` |
+
+### Boissons — `categoryId: boissons`
+
+| Article | Prix TTC | Centimes | `productId` |
+|---------|----------|----------|-------------|
+| Boisson (soft) | 2,00 € | 200 | `boisson` |
+| Eau | 2,00 € | 200 | `eau` |
+| Café | 1,50 € | 150 | `cafe` |
+
+Références soft détaillées (même prix 2,00 €) — utiles photos / caisse :
+
+| Article | Volume | `productId` |
+|---------|--------|-------------|
+| Coca Cola Cherry | 33 cl | `coca-cola-cherry-33` |
+| Coca Cola | 33 cl | `coca-cola-33` |
+| Oasis Pomme Cassis Framboise | 33 cl | `oasis-pomme-cassis-framboise-33` |
+| Oasis tropical | 33 cl | `oasis-tropical-33` |
+| Fanta orange | 33 cl | `fanta-orange-33` |
+| Tropico orange ananas | 33 cl | `tropico-orange-ananas-33` |
+| Perrier | 33 cl | `perrier-33` |
+| Lipton ice tea pêche | 33 cl | `lipton-ice-tea-peche-33` |
+| Orangina | 33 cl | `orangina-33` |
+| Ayran | 25 cl | `ayran-25` |
+| Eau | 50 cl | `eau-50` |
+
+## Parcours personnalisation (PDF étapes)
+
+Ordre UI caisse / borne / click & collect pour produits personnalisables :
+
+### Étape 1 — Pain (`groupId: pains`) — choix unique, 0 €
+
+| Option | `optionId` |
+|--------|------------|
+| Pain (frais de Momo) | `pain-frais` |
+| Dürum | `durum` |
+
+### Étape 2 — Frites (`groupId: frites-etape`) — dans un menu / customizer
+
+| Option | Surcoût | Centimes | `optionId` |
+|--------|---------|----------|------------|
+| Frites Maison | 0,00 € | 0 | `frites-maison` |
+| Cheddar | +1,50 € | 150 | `frites-opt-cheddar` |
+| Cheddar Oignon Frit | +2,00 € | 200 | `frites-opt-cheddar-oignon-frit` |
+| Cheddar Bacon | +2,50 € | 250 | `frites-opt-cheddar-bacon` |
+
+Flag produit : `hasFrites`.
+
+### Étape 3 — Garnitures (`groupId: crudites`) — 0 €
+
+Libellé UI : **Choisi tes garnitures**.
+
+| Option | `optionId` |
+|--------|------------|
+| Salade | `salade` |
+| Tomate | `tomates` |
+| Oignon Rouge | `oignon-rouge` |
+| Choux Rouge | `choux-rouge` |
+| Concombre | `concombre` |
+| Carotte | `carotte` |
+| Sans les crudités | `sans-crudites` |
+| Complet | `complet` |
+
+- Au moins **1** sélection (ou `sans-crudites`).
+- `sans-crudites` : exclusif.
+- `complet` : les 6 ingrédients ; incompatible avec `sans-crudites`.
+
+### Étape 4 — Suppléments (`groupId: supplements`)
+
+| Option | Prix | Centimes | `optionId` |
+|--------|------|----------|------------|
+| Piment Jalapeno | 1,00 € | 100 | `piment-jalapeno` |
+| Cornichon | 1,00 € | 100 | `cornichon` |
+| Cheddar Maison | 1,50 € | 150 | `cheddar-maison` |
+| Boursin | 1,50 € | 150 | `sup-boursin` |
+| Feta | 1,50 € | 150 | `feta` |
+| Chèvre | 1,50 € | 150 | `sup-chevre` |
+| Œuf | 1,50 € | 150 | `oeuf` |
+| Avocat | 2,00 € | 200 | `avocat` |
+| Viande | 3,00 € | 300 | `sup-viande` |
+
+Upsell popup V1 : Feta · Boursin · Cheddar Maison · Frites Cheddar Bacon (`frites-cheddar-bacon`).
+
+### Étape 5 — Sauces (`groupId: sauces`)
+
+**2 sauces max** incluses. Sauce supplémentaire : **+0,50 €** (`EXTRA_SAUCE_CENTS = 50`).
+
+| Sauce | `optionId` |
+|-------|------------|
+| Harissa | `harissa` |
+| Blanche Maison | `blanche-maison` |
+| Ketchup | `ketchup` |
+| Samouraï | `samourai` |
+| Mayonnaise | `mayo` |
+| BBQ | `bbq` |
+| Brazil | `brazil` |
+| Andalouse | `andalouse` |
+| Algérienne | `algerienne` |
+| Curry | `curry` |
+| Biggy | `biggy` |
+
+### Autres options
+
+| Option | Prix | Centimes | `optionId` | Usage |
+|--------|------|----------|------------|-------|
+| Boisson (avec bowl / assiette) | +1,00 € | 100 | `boisson-plus` | Upsell plat |
 
 ## Identifiants techniques (convention)
 
-Quand on code le catalogue :
-
-- `categoryId` stable : `klassik` | `speciaux` | `dwich` | `enfants` | `assiettes` | `texmex` | `barquettes` | `desserts` | `boissons` | `sauces` | `pains` | `crudites`
-- `productId` : slug ASCII stable (ex. `chevre-miel`, `assiette-royal-kebaba`, `coca-cola-33`)
-- Sauces / pains / crudités : `optionId` (personnalisation) ; boissons : `productId` (articles)
+- `categoryId` : `klassik` | `dwich` | `kreations` | `assiettes` | `bowls` | `takos` | `menus` | `ptit-plus` | `barquettes` | `frites` | `desserts` | `boissons`
+- Groupes d’options : `pains` | `frites-etape` | `crudites` | `supplements` | `sauces`
+- Flags produit : `hasPain` | `hasFrites` | `hasCrudites` | `hasSupplements` | `hasSauces`
+- `productId` : slug ASCII stable
 - Ne pas réutiliser les IDs / seed pizza de `LogicielCaisseMilanoGusto`
 
-## À compléter plus tard (pas encore fourni)
+## Obsolète (ne plus seed / désactiver)
 
-- Choix viande pour Klassik & co
-- Sur quels produits : sauces, pain, crudités (si pas tous)
-- Nombre max de sauces
-- Suppléments payants
-- Différences de prix `sur_place` / `a_emporter` / `livraison` si applicables
-- Prix boisson **dans un menu** (si différent du prix seul 2,00 €)
+Ancienne carte : prix Dwich 8 €, Kréations 10,50 €, assiettes 14/12/17, Tex-Mex Mix 10,90 €, Bowl Monster / Burrata, `speciaux`, `boursin-lardon` (singulier), `poulet-curry`, `assiette-royal-kebaba` remplacé par `assiette-royal`, frites SKU « maison » seule à 3,50 sans taille.
+
+## À compléter plus tard
+
 - Composition recettes (food cost / stock)
+- Différences `sur_place` / `a_emporter` / `livraison` si applicables
+- Contenu exact inclus dans chaque « menu » (frites + boisson) pour tickets cuisine
 
 ## Ce que l’agent doit faire
 
-- Seed catalogue caisse / apps = **cette** carte.
-- Si le menu change : mettre à jour **cette règle** en premier, puis le code.
+- Seed catalogue caisse / apps = **cette** carte (PDF).
+- Menu change → **cette règle** d’abord, puis le code.
 - Ne pas inventer de produits ou prix non listés ici.

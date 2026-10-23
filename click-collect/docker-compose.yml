@@ -49,12 +49,19 @@ services:
       - "traefik.http.routers.kebaba.rule=Host(`kebaba.fr`) || Host(`www.kebaba.fr`)"
       - "traefik.http.routers.kebaba.entrypoints=websecure"
       - "traefik.http.routers.kebaba.tls.certresolver=myresolver"
+      - "traefik.http.routers.kebaba.middlewares=kebaba-hsts"
       - "traefik.http.services.kebaba.loadbalancer.server.port=3000"
-      # Redirect HTTP → HTTPS
+      # Redirect HTTP → HTTPS (permanent) + HSTS
       - "traefik.http.routers.kebaba-http.rule=Host(`kebaba.fr`) || Host(`www.kebaba.fr`)"
       - "traefik.http.routers.kebaba-http.entrypoints=web"
       - "traefik.http.routers.kebaba-http.middlewares=kebaba-https-redirect"
+      - "traefik.http.routers.kebaba-http.service=kebaba"
       - "traefik.http.middlewares.kebaba-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.kebaba-https-redirect.redirectscheme.permanent=true"
+      - "traefik.http.middlewares.kebaba-hsts.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.kebaba-hsts.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.kebaba-hsts.headers.stsPreload=true"
+      - "traefik.http.middlewares.kebaba-hsts.headers.forceSTSHeader=true"
 
 networks:
   proxy-net:

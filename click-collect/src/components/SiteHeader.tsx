@@ -22,6 +22,11 @@ export function SiteHeader() {
           <Link href="/menu" className="hover:opacity-80">
             Menu
           </Link>
+          {session?.user ? (
+            <Link href="/commandes" className="hover:opacity-80">
+              Commandes
+            </Link>
+          ) : null}
           <Link href="/compte" className="hover:opacity-80">
             {session?.user ? session.user.name?.split(" ")[0] || "Compte" : "Compte"}
           </Link>

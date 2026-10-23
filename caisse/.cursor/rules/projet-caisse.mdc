@@ -1,0 +1,94 @@
+---
+description: Contexte global du logiciel de caisse AMH Caisse (restaurant, local-first, tablette Lenovo)
+alwaysApply: true
+---
+
+# AMH Caisse — contexte projet
+
+## Objet
+
+Logiciel de caisse sur mesure pour un restaurant (Milano Gusto). Une seule caisse, un seul établissement.
+Cédé en pleine propriété au client.
+
+**Hors périmètre — ne jamais implémenter ni anticiper :**
+- Certification **NF525** (aucune conformité, aucune exigence, aucune architecture liée)
+- Logiciel de caisse certifié ou conforme fiscalement au sens légal
+
+La traçabilité (corrections, annulations, historique) est une **règle métier interne** du client, pas une obligation réglementaire.
+
+## Matériel cible
+
+- **Tablette :** Lenovo Idea Tab 11" — modèle `ZAFR0632SE` (8 Go RAM, 128 Go, Polar Blue + Pen)
+- **OS :** Android 15
+- **Écran :** 11" tactile 2560×1600
+- **Connectivité :** Wi‑Fi 5, Bluetooth 5.2 (pas de 4G sur ce modèle)
+- **TPE :** autonome — le caissier saisit le montant sur le TPE puis confirme manuellement dans l'app
+- **Imprimante :** thermique externe (Bluetooth, réseau ou USB OTG) — **ne pas coder l'impression avant validation du matériel**
+
+## Build et tests
+
+- Développement, compilation et tests via **Android Studio**
+- Livraison en **APK** installable (hors Play Store à valider sur la tablette)
+- Projet Android dans `android_app/`
+
+## Stack technique (V1)
+
+| Besoin | Choix |
+| --- | --- |
+| Plateforme | Android natif |
+| Langage | Kotlin |
+| UI | Jetpack Compose + Material 3 |
+| Base locale | SQLite via Room (quand règles métier stables) |
+| Paramètres | DataStore |
+| Tickets / sauvegardes | JSON |
+| Exports | CSV |
+| Tests | JUnit sur calculs critiques |
+
+**Ne pas ajouter** Room, DataStore, navigation-compose, impression ou autres dépendances sans besoin concret.
+
+## Principes architecture
+
+- **Local-first :** encaissement sans Internet, données sur l'appareil
+- **Montants en centimes** (entiers, ex. `1850` = 18,50 €) — jamais de `Float`/`Double` pour l'argent
+- **Traçabilité :** une vente validée n'est ni modifiée ni supprimée silencieusement ; correction/annulation = nouvelle opération liée
+- **Séparation UI / logique métier** — calculs hors des Composables
+- **Mode test :** notes marquées `FACTICE` ou `SIMULATION`
+
+## Périmètre fonctionnel V1
+
+Catalogue, commandes (sur place / à emporter / livraison), encaissement (CB, espèces, titres-restaurant, autre, paiement mixte, rendu monnaie), note client, historique, statistiques, clôture journalière, sauvegarde/restauration JSON, export CSV.
+
+## Utilisateurs
+
+- **Caissier :** commandes, encaissement, impression
+- **Responsable :** historique, corrections traçables, stats, clôture, export
+- **Admin technique :** installation, sauvegardes, config
+
+## Documentation de référence (`docs/`)
+
+- `cahier-des-charges.md` — spécifications complètes et critères de recette (R01–R13)
+- `preparation_dev_android.md` — environnement et contraintes techniques
+- `implementation_accueil_android.md` — écran d'accueil Compose actuel
+- `stack_simple_android.tex` — proposition stack Android
+
+## État d'avancement
+
+- Projet Android initialisé (`com.amhsolution.caisse`, minSdk 26, targetSdk 35)
+- **Écran d'accueil** Compose implémenté (`HomeScreen.kt`) — navigation pas encore branchée
+- **Pas encore :** panier, modèles métier, Room, impression, tests métier
+
+## Priorités de développement
+
+1. Structure packages Kotlin + modèles métier en mémoire
+2. Navigation Compose depuis l'accueil
+3. Écran caisse (type commande, catégories, produits, panier)
+4. Calculs (totaux, paiement mixte, rendu monnaie) + tests unitaires
+5. Room quand les règles métier sont stables
+6. Historique, stats, sauvegarde — puis impression après test matériel
+
+## Conventions générales
+
+- Répondre à l'utilisateur en **français**
+- Commits Git **uniquement sur demande explicite**
+- Diff minimal, pas de sur-ingénierie
+- Documenter les phases de code dans `docs/` quand pertinent

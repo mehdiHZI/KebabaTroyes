@@ -1,0 +1,8 @@
+## Copier vers local.properties (non versionné) pour brancher l'API VPS.
+## Android Studio génère déjà local.properties avec sdk.dir — ajouter les lignes ci-dessous.
+
+# sdk.dir=/chemin/vers/Android/sdk
+
+caisse.api.baseUrl=https://caisse-api.kebaba.fr
+caisse.api.token=MEME_TOKEN_QUE_CAISSE_API_TOKEN_SUR_LE_VPS
+caisse.register.id=caisse-1
