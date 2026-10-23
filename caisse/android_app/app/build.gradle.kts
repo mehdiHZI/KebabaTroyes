@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -19,7 +21,8 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // Surcharge via local.properties (non commité) : caisse.api.baseUrl / caisse.api.token
-        val localProps = java.util.Properties()
+        // Import Properties : dans le DSL Gradle, `java` = extension plugin, pas java.util
+        val localProps = Properties()
         val localFile = rootProject.file("local.properties")
         if (localFile.exists()) {
             localFile.inputStream().use { localProps.load(it) }
