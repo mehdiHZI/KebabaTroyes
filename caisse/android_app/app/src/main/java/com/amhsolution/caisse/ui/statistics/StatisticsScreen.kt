@@ -57,12 +57,15 @@ fun StatisticsScreen(
     closures: List<CashClosure> = emptyList(),
     closureErrorMessage: String? = null,
     onBack: () -> Unit,
-    onCloseBusinessDay: (String) -> Unit = {},
+    onCreateRapportX: (String) -> Unit = {},
+    onCreateFinalZ: (String) -> Unit = {},
+    /** @deprecated Utiliser onCreateRapportX */
+    onCloseBusinessDay: (String) -> Unit = onCreateRapportX,
     modifier: Modifier = Modifier
 ) {
     var dateFilter by remember { mutableStateOf(HistoryDateFilter.today()) }
     var showCalendar by remember { mutableStateOf(false) }
-    var pendingCloseBusinessDay by remember { mutableStateOf<String?>(null) }
+    var pendingAction by remember { mutableStateOf<Pair<String, String>?>(null) }
 
     val stats = remember(records, dateFilter) {
         records.computeStatistics(dateFilter = dateFilter)
@@ -72,34 +75,46 @@ fun StatisticsScreen(
         if (selectedBusinessDay == null) emptyList()
         else records.filter { it.businessDay == selectedBusinessDay }
     }
-    val selectedDayClosure = remember(closures, selectedBusinessDay) {
+    val selectedDayZ = remember(closures, selectedBusinessDay) {
         closures.firstOrNull {
-            it.businessDay == selectedBusinessDay && it.type == CashClosureType.DAILY_Z
+            it.businessDay == selectedBusinessDay &&
+                it.type == CashClosureType.DAILY_Z &&
+                it.isFinal
+        }
+    }
+    val selectedDayX = remember(closures, selectedBusinessDay) {
+        closures.firstOrNull {
+            it.businessDay == selectedBusinessDay && it.type == CashClosureType.DAILY_X
         }
     }
 
-    pendingCloseBusinessDay?.let { day ->
+    pendingAction?.let { (day, kind) ->
         AlertDialog(
-            onDismissRequest = { pendingCloseBusinessDay = null },
-            title = { Text("Cloture manuelle") },
+            onDismissRequest = { pendingAction = null },
+            title = {
+                Text(if (kind == "Z") "Cloture Z definitive" else "Rapport X provisoire")
+            },
             text = {
                 Text(
-                    "Recalculer le ticket Z de la journee $day ? " +
-                        "Les tickets restent modifiables jusqu'a la cloture automatique (23:59)."
+                    if (kind == "Z") {
+                        "Figer la journee $day ? Apres Z, aucune reecriture de ticket : corrections uniquement par avoir."
+                    } else {
+                        "Generer un rapport X pour $day ? Le rapport est provisoire et ne verrouille pas la journee."
+                    }
                 )
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        pendingCloseBusinessDay = null
-                        onCloseBusinessDay(day)
+                        pendingAction = null
+                        if (kind == "Z") onCreateFinalZ(day) else onCreateRapportX(day)
                     }
                 ) {
-                    Text("Cloturer")
+                    Text(if (kind == "Z") "Cloturer Z" else "Rapport X")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { pendingCloseBusinessDay = null }) {
+                TextButton(onClick = { pendingAction = null }) {
                     Text("Annuler")
                 }
             }
@@ -190,9 +205,11 @@ fun StatisticsScreen(
             DailyClosureCard(
                 businessDay = selectedBusinessDay,
                 records = selectedDayRecords,
-                closure = selectedDayClosure,
+                finalZ = selectedDayZ,
+                rapportX = selectedDayX,
                 errorMessage = closureErrorMessage,
-                onRequestClose = { day -> pendingCloseBusinessDay = day }
+                onRequestRapportX = { day -> pendingAction = day to "X" },
+                onRequestFinalZ = { day -> pendingAction = day to "Z" }
             )
         }
     }
@@ -216,14 +233,14 @@ fun StatisticsScreen(
 private fun DailyClosureCard(
     businessDay: String?,
     records: List<HistoryRecord>,
-    closure: CashClosure?,
+    finalZ: CashClosure?,
+    rapportX: CashClosure?,
     errorMessage: String?,
-    onRequestClose: (String) -> Unit
+    onRequestRapportX: (String) -> Unit,
+    onRequestFinalZ: (String) -> Unit
 ) {
-    val canCloseManually =
-        businessDay != null &&
-            records.isNotEmpty() &&
-            (closure == null || !closure.isFinal)
+    val canRapportX = businessDay != null && records.isNotEmpty()
+    val canFinalZ = businessDay != null && records.isNotEmpty() && finalZ == null
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -244,8 +261,8 @@ private fun DailyClosureCard(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Cloture manuelle illimitee (provisoire). " +
-                    "La cloture automatique a 23:59 est definitive et verrouille les tickets.",
+                text = "Rapport X = provisoire (illimite). Cloture Z = definitive (une seule par jour). " +
+                    "Apres Z : corrections uniquement par avoir. Z auto en fin de journee si absente.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = CaisseMuted
             )
@@ -267,47 +284,60 @@ private fun DailyClosureCard(
                     )
                 }
 
-                closure != null -> {
-                    ClosureSummary(closure)
-                    if (!closure.isFinal) {
-                        DailyClosurePreview(records)
-                    }
-                }
-
-                records.isEmpty() -> {
-                    Text(
-                        text = "Aucun ticket encaisse sur cette journee.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = CaisseMuted
-                    )
+                finalZ != null -> {
+                    ClosureSummary(finalZ)
                 }
 
                 else -> {
-                    DailyClosurePreview(records)
+                    rapportX?.let { ClosureSummary(it) }
+                    if (records.isEmpty()) {
+                        Text(
+                            text = "Aucun ticket encaisse sur cette journee.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = CaisseMuted
+                        )
+                    } else {
+                        DailyClosurePreview(records)
+                    }
                 }
             }
 
-            if (canCloseManually && businessDay != null) {
+            if (canRapportX && businessDay != null && finalZ == null) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Card(
-                    onClick = { onRequestClose(businessDay) },
+                    onClick = { onRequestRapportX(businessDay) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                     colors = CardDefaults.cardColors(containerColor = WireframeGreenBackground),
                     border = BorderStroke(1.dp, WireframeGreenBorder)
                 ) {
                     Text(
-                        text = if (closure == null) {
-                            "Cloturer la journee (manuel)"
-                        } else {
-                            "Actualiser la cloture manuelle"
-                        },
+                        text = if (rapportX == null) "Generer rapport X" else "Actualiser rapport X",
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 14.dp),
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.Bold,
                         color = WireframeGreenText
+                    )
+                }
+            }
+
+            if (canFinalZ && businessDay != null) {
+                Card(
+                    onClick = { onRequestFinalZ(businessDay) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = BorderStroke(1.dp, WireframeBorder)
+                ) {
+                    Text(
+                        text = "Cloture Z definitive",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 14.dp),
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }

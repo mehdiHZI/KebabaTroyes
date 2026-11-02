@@ -13,7 +13,14 @@ data class HistoryRecord(
     val lines: List<OrderLineSnapshot>,
     val totalCentimes: Int,
     val payments: List<PaymentRecord>,
-    val deliveryInfo: DeliveryInfo? = null
+    val deliveryInfo: DeliveryInfo? = null,
+    /** Ticket d'origine si avoir / contre-opération. */
+    val linkedTicketId: String? = null,
+    val isCorrection: Boolean = false,
+    val integrityHash: String = "",
+    val previousIntegrityHash: String? = null,
+    val isSimulation: Boolean = false,
+    val registerId: String = "caisse-1"
 ) {
     val dateTimeLabel: String
         get() = formatHistoryDateTime(paidAtEpochMillis)
@@ -27,11 +34,15 @@ data class HistoryRecord(
     val paymentBreakdownLabel: String
         get() = formatPaymentBreakdownLabel(payments)
 
+    /** Legacy Milano : paiement ANNULE sur le même ticket (ne plus créer). */
     val isCancelled: Boolean
         get() = payments.any { it.method == PaymentMethod.ANNULE }
 
     val effectiveTotalCentimes: Int
-        get() = if (isCancelled) 0 else totalCentimes
+        get() = when {
+            isCancelled -> 0
+            else -> totalCentimes
+        }
 
     val itemsLabel: String
         get() = lines.joinToString(separator = ", ") { it.displayLabel }

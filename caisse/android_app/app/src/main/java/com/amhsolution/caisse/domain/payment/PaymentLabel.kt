@@ -10,6 +10,7 @@ fun paymentMethodShortLabel(method: PaymentMethod): String =
         PaymentMethod.CARTE_BANCAIRE -> "CB"
         PaymentMethod.TITRE_RESTAURANT -> "Ticket resto"
         PaymentMethod.AUTRE -> "Autre"
+        PaymentMethod.AVOIR -> "Avoir"
         PaymentMethod.ANNULE -> "Annulé"
     }
 

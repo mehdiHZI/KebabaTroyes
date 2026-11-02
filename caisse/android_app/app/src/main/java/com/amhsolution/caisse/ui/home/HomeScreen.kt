@@ -57,6 +57,8 @@ enum class HomeDestination {
 fun HomeScreen(
     modifier: Modifier = Modifier,
     syncStatus: SyncStatusSnapshot? = null,
+    simulationEnabled: Boolean = false,
+    onToggleSimulation: (() -> Unit)? = null,
     onActionSelected: (HomeDestination) -> Unit = {}
 ) {
     Surface(
@@ -70,6 +72,8 @@ fun HomeScreen(
                         .fillMaxSize()
                         .padding(horizontal = 20.dp, vertical = 20.dp),
                     syncStatus = syncStatus,
+                    simulationEnabled = simulationEnabled,
+                    onToggleSimulation = onToggleSimulation,
                     onActionSelected = onActionSelected
                 )
             } else {
@@ -78,6 +82,8 @@ fun HomeScreen(
                         .fillMaxSize()
                         .padding(horizontal = 40.dp, vertical = 28.dp),
                     syncStatus = syncStatus,
+                    simulationEnabled = simulationEnabled,
+                    onToggleSimulation = onToggleSimulation,
                     onActionSelected = onActionSelected
                 )
             }
@@ -89,10 +95,16 @@ fun HomeScreen(
 private fun WireframeHomeLayout(
     modifier: Modifier = Modifier,
     syncStatus: SyncStatusSnapshot?,
+    simulationEnabled: Boolean = false,
+    onToggleSimulation: (() -> Unit)? = null,
     onActionSelected: (HomeDestination) -> Unit
 ) {
     Column(modifier = modifier) {
-        HomeWireframeHeader(syncStatus = syncStatus)
+        HomeWireframeHeader(
+            syncStatus = syncStatus,
+            simulationEnabled = simulationEnabled,
+            onToggleSimulation = onToggleSimulation
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -156,13 +168,19 @@ private fun WireframeHomeLayout(
 private fun CompactHomeLayout(
     modifier: Modifier = Modifier,
     syncStatus: SyncStatusSnapshot?,
+    simulationEnabled: Boolean = false,
+    onToggleSimulation: (() -> Unit)? = null,
     onActionSelected: (HomeDestination) -> Unit
 ) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        HomeWireframeHeader(syncStatus = syncStatus)
+        HomeWireframeHeader(
+            syncStatus = syncStatus,
+            simulationEnabled = simulationEnabled,
+            onToggleSimulation = onToggleSimulation
+        )
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             NavButton("Historique", Modifier.weight(1f)) {
@@ -226,7 +244,11 @@ private fun AmhAttribution() {
 }
 
 @Composable
-private fun HomeWireframeHeader(syncStatus: SyncStatusSnapshot? = null) {
+private fun HomeWireframeHeader(
+    syncStatus: SyncStatusSnapshot? = null,
+    simulationEnabled: Boolean = false,
+    onToggleSimulation: (() -> Unit)? = null
+) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -239,7 +261,30 @@ private fun HomeWireframeHeader(syncStatus: SyncStatusSnapshot? = null) {
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
-            syncStatus?.let { SyncStatusBadge(it) }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (simulationEnabled || onToggleSimulation != null) {
+                    Card(
+                        onClick = { onToggleSimulation?.invoke() },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (simulationEnabled) {
+                                WireframeYellowBackground
+                            } else {
+                                Color.White
+                            }
+                        ),
+                        border = BorderStroke(1.dp, WireframeBorder)
+                    ) {
+                        Text(
+                            text = if (simulationEnabled) "FACTICE" else "Prod",
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                syncStatus?.let { SyncStatusBadge(it) }
+            }
         }
         Spacer(modifier = Modifier.height(8.dp))
         HorizontalDivider(color = WireframeBorder.copy(alpha = 0.25f))

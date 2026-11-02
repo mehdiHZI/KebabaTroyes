@@ -14,7 +14,13 @@ data class HistoryEntryEntity(
     val linesJson: String,
     val totalCentimes: Int,
     val paymentsJson: String,
-    val deliveryInfoJson: String?
+    val deliveryInfoJson: String?,
+    val linkedTicketId: String? = null,
+    val isCorrection: Boolean = false,
+    val integrityHash: String = "",
+    val previousIntegrityHash: String? = null,
+    val isSimulation: Boolean = false,
+    val registerId: String = "caisse-1"
 )
 
 @Entity(tableName = "ticket_counter")
@@ -43,6 +49,32 @@ data class CashClosureEntity(
     val paymentTotalsJson: String,
     val paymentCountsJson: String,
     val orderTypeTotalsJson: String,
-    /** 1 = Z automatique définitive ; 0 = Z manuelle provisoire. */
-    val isFinal: Boolean = false
+    /** 1 = Z définitive ; 0 = rapport X / provisoire. */
+    val isFinal: Boolean = false,
+    val closureHash: String = "",
+    val previousClosureHash: String? = null
+)
+
+/** Totaux perpétuels depuis la 1ère utilisation (jamais remis à zéro sans archivage matériel). */
+@Entity(tableName = "perpetual_totals")
+data class PerpetualTotalsEntity(
+    @PrimaryKey val id: String = "default",
+    val totalRevenueCentimes: Long = 0L,
+    val ticketCount: Long = 0L,
+    val correctionCount: Long = 0L,
+    val lastUpdatedEpochMillis: Long = 0L,
+    val integrityHash: String = ""
+)
+
+/** Journal des archives fiscales générées. */
+@Entity(tableName = "fiscal_archives")
+data class FiscalArchiveEntity(
+    @PrimaryKey val id: String,
+    val createdAtEpochMillis: Long,
+    val periodFrom: String,
+    val periodTo: String,
+    val archiveHash: String,
+    val relativePath: String,
+    val ticketCount: Int,
+    val noticeIncluded: Boolean = true
 )

@@ -40,7 +40,7 @@ class CashClosureTest {
             closedAtEpochMillis = 1_782_300_000_000
         )
 
-        assertEquals(CashClosureType.DAILY_Z, closure.type)
+        assertEquals(CashClosureType.DAILY_X, closure.type)
         assertEquals(2, closure.ticketCount)
         assertEquals(1, closure.firstTicketNumber)
         assertEquals(2, closure.lastTicketNumber)
@@ -57,7 +57,7 @@ class CashClosureTest {
         assertEquals(2400, closure.orderTypeTotalsCentimes[OrderType.LIVRAISON])
         assertEquals(false, closure.isFinal)
         assertEquals(false, closure.locksTickets)
-        assertEquals("Cloture manuelle (provisoire)", closure.statusLabel)
+        assertEquals("Rapport X (provisoire)", closure.statusLabel)
     }
 
     @Test
@@ -77,8 +77,9 @@ class CashClosureTest {
         )
 
         assertEquals(true, closure.isFinal)
+        assertEquals(CashClosureType.DAILY_Z, closure.type)
         assertEquals(true, closure.locksTickets)
-        assertEquals("Cloture automatique (definitive)", closure.statusLabel)
+        assertEquals("Cloture Z (definitive)", closure.statusLabel)
     }
 
     @Test

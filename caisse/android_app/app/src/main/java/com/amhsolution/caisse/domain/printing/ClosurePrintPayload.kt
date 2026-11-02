@@ -93,11 +93,13 @@ internal fun PaymentMethod.closurePrintCode(): String =
         PaymentMethod.ESPECES -> "ESP"
         PaymentMethod.TITRE_RESTAURANT -> "TR"
         PaymentMethod.AUTRE -> "AUTRE"
+        PaymentMethod.AVOIR -> "AVOIR"
         PaymentMethod.ANNULE -> "ANNULE"
     }
 
 internal fun CashClosureType.printShortLabel(): String =
     when (this) {
+        CashClosureType.DAILY_X -> "RAPPORT X JOURNALIER"
         CashClosureType.DAILY_Z -> "TICKET Z JOURNALIER"
         CashClosureType.MONTHLY_Z -> "TICKET Z MENSUEL"
         CashClosureType.YEARLY_Z -> "TICKET Z ANNUEL"

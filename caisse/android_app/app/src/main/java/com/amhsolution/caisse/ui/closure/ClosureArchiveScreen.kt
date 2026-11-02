@@ -427,7 +427,10 @@ private fun ClosureDetailCard(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
-            if (closure.type == CashClosureType.DAILY_Z) {
+            if (
+                closure.type == CashClosureType.DAILY_Z ||
+                closure.type == CashClosureType.DAILY_X
+            ) {
                 Text(
                     text = closure.statusLabel,
                     style = MaterialTheme.typography.bodyMedium,
@@ -522,6 +525,7 @@ private fun periodYear(closure: CashClosure): String =
 
 private fun periodMonthOrNull(closure: CashClosure): String? =
     when (closure.type) {
+        CashClosureType.DAILY_X,
         CashClosureType.DAILY_Z,
         CashClosureType.MONTHLY_Z -> closure.businessDay.substring(5, 7)
         CashClosureType.YEARLY_Z -> null
@@ -532,6 +536,7 @@ private fun closureTypeSortOrder(type: CashClosureType): Int =
         CashClosureType.YEARLY_Z -> 0
         CashClosureType.MONTHLY_Z -> 1
         CashClosureType.DAILY_Z -> 2
+        CashClosureType.DAILY_X -> 3
     }
 
 private fun monthOptionLabel(option: String): String =
@@ -556,6 +561,7 @@ private fun monthLabel(month: String): String =
 
 private fun closureListLabel(closure: CashClosure): String =
     when (closure.type) {
+        CashClosureType.DAILY_X -> "X ${dayLabel(closure.businessDay)}"
         CashClosureType.DAILY_Z -> dayLabel(closure.businessDay)
         CashClosureType.MONTHLY_Z -> "Mois complet"
         CashClosureType.YEARLY_Z -> "Annee complete"
@@ -563,6 +569,7 @@ private fun closureListLabel(closure: CashClosure): String =
 
 private fun closurePeriodLabel(closure: CashClosure): String =
     when (closure.type) {
+        CashClosureType.DAILY_X,
         CashClosureType.DAILY_Z -> dayLabel(closure.businessDay)
         CashClosureType.MONTHLY_Z -> "${monthLabel(closure.businessDay.substring(5, 7))} ${periodYear(closure)}"
         CashClosureType.YEARLY_Z -> periodYear(closure)

@@ -486,15 +486,11 @@ fun HistoryTicketDetailScreen(
     record: HistoryRecord,
     onBack: () -> Unit,
     onPrintTicket: (() -> Unit)? = null,
-    onSavePayments: (List<PaymentRecord>) -> Unit,
+    onIssueCreditNote: (() -> Unit)? = null,
+    creditNoteAlreadyIssued: Boolean = false,
     isLocked: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    var editedPayments by remember(record.id, record.payments) {
-        mutableStateOf(record.payments)
-    }
-    var paymentCommand by remember(record.id) { mutableStateOf("") }
-
     Surface(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -511,7 +507,11 @@ fun HistoryTicketDetailScreen(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
-                        text = "Ticket ${record.ticketLabel}",
+                        text = buildString {
+                            append("Ticket ${record.ticketLabel}")
+                            if (record.isCorrection) append(" (avoir)")
+                            if (record.isSimulation) append(" [FACTICE]")
+                        },
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -559,14 +559,28 @@ fun HistoryTicketDetailScreen(
                         color = WireframeGreenText
                     )
                     Text(
-                        text = if (record.isCancelled) {
-                            "Paiement : Annulé"
-                        } else {
-                            "Paiement : ${record.paymentBreakdownLabel}"
+                        text = when {
+                            record.isCancelled -> "Paiement : Annulé"
+                            record.isCorrection -> "Contre-operation : ${record.paymentBreakdownLabel}"
+                            else -> "Paiement : ${record.paymentBreakdownLabel}"
                         },
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.SemiBold
                     )
+                    if (record.linkedTicketId != null) {
+                        Text(
+                            text = "Lie au ticket ${record.linkedTicketId}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = CaisseMuted
+                        )
+                    }
+                    if (record.integrityHash.isNotBlank()) {
+                        Text(
+                            text = "Empreinte : ${record.integrityHash.take(16)}…",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = CaisseMuted
+                        )
+                    }
                     record.deliveryInfo?.let { info ->
                         val phonePart = info.phoneNumber.takeIf { it.isNotBlank() }
                             ?.let { " - Tel. $it" }
@@ -583,73 +597,29 @@ fun HistoryTicketDetailScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = if (isLocked) {
-                    "Ticket verrouille par une cloture Z"
-                } else {
-                    "Modifier le moyen de paiement"
-                },
+                text = "Corrections fiscales",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            if (isLocked) {
-                Text(
-                    text = "La journee de ce ticket est deja cloturee. Le ticket reste consultable, mais le paiement n'est plus modifiable.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = CaisseMuted
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-
-            OutlinedTextField(
-                value = paymentCommand,
-                onValueChange = { paymentCommand = it },
-                enabled = !isLocked,
-                label = { Text("Commande paiement") },
-                supportingText = { Text("Ecrire annuler puis enregistrer pour annuler ce ticket.") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(0.5f)
+            Text(
+                text = when {
+                    record.isCorrection ->
+                        "Ce ticket est deja une contre-operation. Le ticket d'origine reste inchange."
+                    record.isCancelled ->
+                        "Ticket legacy annule — pas de nouvelle correction."
+                    creditNoteAlreadyIssued ->
+                        "Un avoir a deja ete emis pour ce ticket. Le ticket d'origine reste inalterable."
+                    isLocked ->
+                        "Journee cloturee (Z). Correction possible uniquement par emission d'un avoir."
+                    else ->
+                        "Un ticket valide ne peut plus etre modifie. Pour corriger, emettre un avoir (nouvelle transaction liee)."
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = CaisseMuted
             )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            if (editedPayments.size == 1) {
-                PaymentMethodSelector(
-                    selectedMethod = editedPayments.first().method,
-                    enabled = !isLocked,
-                    onMethodSelected = { method ->
-                        val currentPayment = editedPayments.first()
-                        editedPayments = listOf(
-                            currentPayment.copy(
-                                method = method,
-                                amountCentimes = if (
-                                    currentPayment.method == PaymentMethod.ANNULE &&
-                                    currentPayment.amountCentimes == 0
-                                ) {
-                                    record.totalCentimes
-                                } else {
-                                    currentPayment.amountCentimes
-                                }
-                            )
-                        )
-                    }
-                )
-            } else {
-                editedPayments.forEachIndexed { index, payment ->
-                    PaymentLineEditor(
-                        payment = payment,
-                        enabled = !isLocked,
-                        onMethodChange = { method ->
-                            editedPayments = editedPayments.toMutableList().also {
-                                it[index] = payment.copy(method = method)
-                            }
-                        }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-            }
 
             Spacer(modifier = Modifier.weight(1f))
 
@@ -659,30 +629,29 @@ fun HistoryTicketDetailScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextButton(onClick = onBack) {
-                    Text("Annuler")
+                    Text("Fermer")
                 }
-                Spacer(modifier = Modifier.width(8.dp))
-                Card(
-                    onClick = {
-                        val command = paymentCommand.trim()
-                        if (command.equals("annuler", ignoreCase = true)) {
-                            onSavePayments(listOf(PaymentRecord(PaymentMethod.ANNULE, 0)))
-                        } else {
-                            onSavePayments(editedPayments)
-                        }
-                    },
-                    enabled = !isLocked,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = CaisseBlue),
-                    border = BorderStroke(1.dp, CaisseBlueDark)
+                if (
+                    onIssueCreditNote != null &&
+                    !record.isCorrection &&
+                    !record.isCancelled &&
+                    !creditNoteAlreadyIssued
                 ) {
-                    Text(
-                        text = "Enregistrer",
-                        modifier = Modifier.padding(horizontal = 22.dp, vertical = 12.dp),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Card(
+                        onClick = onIssueCreditNote,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = CaisseBlue),
+                        border = BorderStroke(1.dp, CaisseBlueDark)
+                    ) {
+                        Text(
+                            text = "Emettre un avoir",
+                            modifier = Modifier.padding(horizontal = 22.dp, vertical = 12.dp),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
                 }
             }
         }

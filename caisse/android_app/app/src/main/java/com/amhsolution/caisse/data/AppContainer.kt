@@ -2,11 +2,14 @@ package com.amhsolution.caisse.data
 
 import android.content.Context
 import com.amhsolution.caisse.CaisseApplication
+import com.amhsolution.caisse.data.auth.ResponsibleAuthRepository
+import com.amhsolution.caisse.data.auth.SimulationModeRepository
 import com.amhsolution.caisse.data.local.CaisseDatabase
 import com.amhsolution.caisse.data.printing.PrinterSettingsRepository
 import com.amhsolution.caisse.data.printing.ReceiptPrinter
 import com.amhsolution.caisse.data.repository.CashClosureRepository
 import com.amhsolution.caisse.data.repository.CatalogRepository
+import com.amhsolution.caisse.data.repository.FiscalArchiveRepository
 import com.amhsolution.caisse.data.repository.HistoryRepository
 import com.amhsolution.caisse.data.repository.PendingOrderRepository
 import com.amhsolution.caisse.data.sync.RemoteOrdersRepository
@@ -18,6 +21,7 @@ import com.amhsolution.caisse.domain.catalog.PizzaCatalog
 import com.amhsolution.caisse.domain.catalog.ProductOptionCatalog
 import com.amhsolution.caisse.domain.catalog.SampleCatalog
 import com.amhsolution.caisse.domain.closure.CashClosure
+import com.amhsolution.caisse.domain.closure.PerpetualTotals
 import com.amhsolution.caisse.domain.model.HistoryRecord
 import com.amhsolution.caisse.domain.model.Product
 import kotlinx.coroutines.CoroutineScope
@@ -25,8 +29,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.io.File
 
 /**
@@ -39,8 +45,19 @@ class AppContainer(context: Context) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     val database: CaisseDatabase = CaisseDatabase.getInstance(appContext)
-    val historyRepository = HistoryRepository(database)
+    val simulationModeRepository = SimulationModeRepository(appContext)
+    val responsibleAuthRepository = ResponsibleAuthRepository(appContext)
+    val historyRepository = HistoryRepository(
+        database = database,
+        isSimulationMode = {
+            runBlocking { simulationModeRepository.isEnabledNow() }
+        }
+    )
     val cashClosureRepository = CashClosureRepository(database, File(appContext.filesDir, "cloture"))
+    val fiscalArchiveRepository = FiscalArchiveRepository(
+        database = database,
+        archiveRoot = File(appContext.filesDir, "archives")
+    )
     val pendingOrderRepository = PendingOrderRepository(File(appContext.filesDir, "pending_orders.json"))
     val catalogRepository = CatalogRepository(appContext)
     val printerSettingsRepository = PrinterSettingsRepository(appContext)
@@ -62,6 +79,23 @@ class AppContainer(context: Context) {
     val cashClosures: StateFlow<List<CashClosure>> =
         cashClosureRepository.observeClosures()
             .stateIn(scope, SharingStarted.Eagerly, emptyList())
+
+    val simulationEnabled: StateFlow<Boolean> =
+        simulationModeRepository.isEnabled
+            .stateIn(scope, SharingStarted.Eagerly, false)
+
+    val perpetualTotals: StateFlow<PerpetualTotals> =
+        database.perpetualTotalsDao().observe()
+            .map { entity ->
+                PerpetualTotals(
+                    totalRevenueCentimes = entity?.totalRevenueCentimes ?: 0L,
+                    ticketCount = entity?.ticketCount ?: 0L,
+                    correctionCount = entity?.correctionCount ?: 0L,
+                    lastUpdatedEpochMillis = entity?.lastUpdatedEpochMillis ?: 0L,
+                    integrityHash = entity?.integrityHash.orEmpty()
+                )
+            }
+            .stateIn(scope, SharingStarted.Eagerly, PerpetualTotals())
 
     val catalogProducts: StateFlow<List<Product>> =
         catalogRepository.products

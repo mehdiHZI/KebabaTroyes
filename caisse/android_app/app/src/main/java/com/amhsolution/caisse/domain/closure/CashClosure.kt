@@ -5,6 +5,7 @@ import com.amhsolution.caisse.domain.model.OrderType
 import com.amhsolution.caisse.domain.model.PaymentMethod
 
 enum class CashClosureType(val label: String) {
+    DAILY_X("Rapport X journalier"),
     DAILY_Z("Ticket Z journalier"),
     MONTHLY_Z("Ticket Z mensuel"),
     YEARLY_Z("Ticket Z annuel")
@@ -25,22 +26,25 @@ data class CashClosure(
     val paymentCounts: Map<PaymentMethod, Int>,
     val orderTypeTotalsCentimes: Map<OrderType, Int>,
     /**
-     * true = ticket Z automatique (définitif) : les tickets du jour sont verrouillés.
-     * false = clôture manuelle (provisoire) : recalculable / écrasable.
+     * true = Z définitive (verrouille le jour).
+     * false = rapport X provisoire (ne fige rien).
      */
-    val isFinal: Boolean = false
+    val isFinal: Boolean = false,
+    val closureHash: String = "",
+    val previousClosureHash: String? = null
 ) {
     val cancelledOrderCount: Int
-        get() = paymentCounts[PaymentMethod.ANNULE] ?: 0
+        get() = (paymentCounts[PaymentMethod.ANNULE] ?: 0) + (paymentCounts[PaymentMethod.AVOIR] ?: 0)
 
     val locksTickets: Boolean
         get() = type == CashClosureType.DAILY_Z && isFinal
 
     val statusLabel: String
-        get() = when {
-            type != CashClosureType.DAILY_Z -> type.label
-            isFinal -> "Cloture automatique (definitive)"
-            else -> "Cloture manuelle (provisoire)"
+        get() = when (type) {
+            CashClosureType.DAILY_X -> "Rapport X (provisoire)"
+            CashClosureType.DAILY_Z -> if (isFinal) "Cloture Z (definitive)" else "Cloture Z (incomplete)"
+            CashClosureType.MONTHLY_Z -> type.label
+            CashClosureType.YEARLY_Z -> type.label
         }
 
     val ticketRangeLabel: String
@@ -51,13 +55,22 @@ data class CashClosure(
         }
 }
 
+fun List<HistoryRecord>.productionRecords(): List<HistoryRecord> =
+    filterNot { it.isSimulation }
+
 fun List<HistoryRecord>.buildDailyCashClosure(
     businessDay: String,
     closedAtEpochMillis: Long,
     isFinal: Boolean = false,
-    id: String = "daily-z-$businessDay"
+    type: CashClosureType = if (isFinal) CashClosureType.DAILY_Z else CashClosureType.DAILY_X,
+    id: String = when (type) {
+        CashClosureType.DAILY_X -> "daily-x-$businessDay"
+        CashClosureType.DAILY_Z -> "daily-z-$businessDay"
+        else -> "${type.name.lowercase()}-$businessDay-$closedAtEpochMillis"
+    }
 ): CashClosure {
-    val dayRecords = filter { it.businessDay == businessDay }
+    val dayRecords = productionRecords()
+        .filter { it.businessDay == businessDay }
         .sortedWith(compareBy<HistoryRecord> { it.ticketNumber }.thenBy { it.paidAtEpochMillis })
     val records = dayRecords.filterNot { it.isCancelled }
 
@@ -88,7 +101,7 @@ fun List<HistoryRecord>.buildDailyCashClosure(
 
     return CashClosure(
         id = id,
-        type = CashClosureType.DAILY_Z,
+        type = type,
         businessDay = businessDay,
         closedAtEpochMillis = closedAtEpochMillis,
         ticketCount = records.size,
@@ -110,7 +123,9 @@ fun List<CashClosure>.buildMonthlyCashClosure(
     id: String = "monthly-z-$periodMonth-$closedAtEpochMillis"
 ): CashClosure {
     val dailyClosures = filter {
-        it.type == CashClosureType.DAILY_Z && it.businessDay.startsWith("$periodMonth-")
+        it.type == CashClosureType.DAILY_Z &&
+            it.isFinal &&
+            it.businessDay.startsWith("$periodMonth-")
     }
     return dailyClosures.buildAggregatedCashClosure(
         type = CashClosureType.MONTHLY_Z,
@@ -126,7 +141,9 @@ fun List<CashClosure>.buildYearlyCashClosure(
     id: String = "yearly-z-$periodYear-$closedAtEpochMillis"
 ): CashClosure {
     val dailyClosures = filter {
-        it.type == CashClosureType.DAILY_Z && it.businessDay.startsWith("$periodYear-")
+        it.type == CashClosureType.DAILY_Z &&
+            it.isFinal &&
+            it.businessDay.startsWith("$periodYear-")
     }
     return dailyClosures.buildAggregatedCashClosure(
         type = CashClosureType.YEARLY_Z,
@@ -142,11 +159,11 @@ private fun List<CashClosure>.buildAggregatedCashClosure(
     closedAtEpochMillis: Long,
     id: String
 ): CashClosure {
-    val dailyClosures = filter { it.type == CashClosureType.DAILY_Z }
+    val dailyClosures = filter { it.type == CashClosureType.DAILY_Z && it.isFinal }
         .sortedBy { it.businessDay }
 
     require(dailyClosures.isNotEmpty()) {
-        "Impossible de creer une cloture ${type.label.lowercase()} sans cloture journaliere."
+        "Impossible de creer une cloture ${type.label.lowercase()} sans cloture journaliere definitive."
     }
 
     val ticketCount = dailyClosures.sumOf { it.ticketCount }

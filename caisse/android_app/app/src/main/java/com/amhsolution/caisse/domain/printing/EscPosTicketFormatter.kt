@@ -131,7 +131,8 @@ fun ClosureReportPrintPayload.toPrintableText(zoneId: ZoneId = ZoneId.systemDefa
             PaymentMethod.CARTE_BANCAIRE,
             PaymentMethod.ESPECES,
             PaymentMethod.TITRE_RESTAURANT,
-            PaymentMethod.AUTRE
+            PaymentMethod.AUTRE,
+            PaymentMethod.AVOIR
         ).forEach { method ->
             val label = "${method.closurePrintCode()} ${method.label} [${closure.paymentCounts[method] ?: 0}]"
             appendAmountLine(label, closure.paymentTotalsCentimes[method] ?: 0, columns)

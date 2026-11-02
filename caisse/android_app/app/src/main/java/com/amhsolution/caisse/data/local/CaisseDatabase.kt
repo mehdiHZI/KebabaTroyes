@@ -7,22 +7,28 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.amhsolution.caisse.data.local.dao.CashClosureDao
+import com.amhsolution.caisse.data.local.dao.FiscalArchiveDao
 import com.amhsolution.caisse.data.local.dao.HistoryDao
-import com.amhsolution.caisse.data.local.dao.SyncOutboxDao
+import com.amhsolution.caisse.data.local.dao.PerpetualTotalsDao
 import com.amhsolution.caisse.data.local.dao.TicketCounterDao
 import com.amhsolution.caisse.data.local.entity.CashClosureEntity
+import com.amhsolution.caisse.data.local.entity.FiscalArchiveEntity
 import com.amhsolution.caisse.data.local.entity.HistoryEntryEntity
+import com.amhsolution.caisse.data.local.entity.PerpetualTotalsEntity
 import com.amhsolution.caisse.data.local.entity.SyncOutboxEntity
 import com.amhsolution.caisse.data.local.entity.TicketCounterEntity
+import com.amhsolution.caisse.data.local.dao.SyncOutboxDao
 
 @Database(
     entities = [
         HistoryEntryEntity::class,
         TicketCounterEntity::class,
         CashClosureEntity::class,
-        SyncOutboxEntity::class
+        SyncOutboxEntity::class,
+        PerpetualTotalsEntity::class,
+        FiscalArchiveEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class CaisseDatabase : RoomDatabase() {
@@ -30,6 +36,8 @@ abstract class CaisseDatabase : RoomDatabase() {
     abstract fun ticketCounterDao(): TicketCounterDao
     abstract fun cashClosureDao(): CashClosureDao
     abstract fun syncOutboxDao(): SyncOutboxDao
+    abstract fun perpetualTotalsDao(): PerpetualTotalsDao
+    abstract fun fiscalArchiveDao(): FiscalArchiveDao
 
     companion object {
         @Volatile
@@ -42,10 +50,85 @@ abstract class CaisseDatabase : RoomDatabase() {
                     CaisseDatabase::class.java,
                     "caisse.db"
                 )
-                    .addMigrations(Migration1To2, Migration2To3, Migration3To4, Migration4To5)
+                    .addMigrations(
+                        Migration1To2,
+                        Migration2To3,
+                        Migration3To4,
+                        Migration4To5,
+                        Migration5To6
+                    )
                     .build()
                     .also { instance = it }
             }
+    }
+}
+
+private val Migration5To6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `history_entries` ADD COLUMN `linkedTicketId` TEXT")
+        db.execSQL(
+            "ALTER TABLE `history_entries` ADD COLUMN `isCorrection` INTEGER NOT NULL DEFAULT 0"
+        )
+        db.execSQL(
+            "ALTER TABLE `history_entries` ADD COLUMN `integrityHash` TEXT NOT NULL DEFAULT ''"
+        )
+        db.execSQL("ALTER TABLE `history_entries` ADD COLUMN `previousIntegrityHash` TEXT")
+        db.execSQL(
+            "ALTER TABLE `history_entries` ADD COLUMN `isSimulation` INTEGER NOT NULL DEFAULT 0"
+        )
+        db.execSQL(
+            "ALTER TABLE `history_entries` ADD COLUMN `registerId` TEXT NOT NULL DEFAULT 'caisse-1'"
+        )
+
+        // Colonnes hash clôture (peuvent déjà exister en V2 puis avoir été perdues en V3)
+        try {
+            db.execSQL(
+                "ALTER TABLE `cash_closures` ADD COLUMN `closureHash` TEXT NOT NULL DEFAULT ''"
+            )
+        } catch (_: Exception) {
+            // déjà présent
+        }
+        try {
+            db.execSQL("ALTER TABLE `cash_closures` ADD COLUMN `previousClosureHash` TEXT")
+        } catch (_: Exception) {
+            // déjà présent
+        }
+
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `perpetual_totals` (
+                `id` TEXT NOT NULL,
+                `totalRevenueCentimes` INTEGER NOT NULL,
+                `ticketCount` INTEGER NOT NULL,
+                `correctionCount` INTEGER NOT NULL,
+                `lastUpdatedEpochMillis` INTEGER NOT NULL,
+                `integrityHash` TEXT NOT NULL,
+                PRIMARY KEY(`id`)
+            )
+            """.trimIndent()
+        )
+        db.execSQL(
+            """
+            INSERT OR IGNORE INTO `perpetual_totals`
+            (`id`, `totalRevenueCentimes`, `ticketCount`, `correctionCount`, `lastUpdatedEpochMillis`, `integrityHash`)
+            VALUES ('default', 0, 0, 0, 0, '')
+            """.trimIndent()
+        )
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `fiscal_archives` (
+                `id` TEXT NOT NULL,
+                `createdAtEpochMillis` INTEGER NOT NULL,
+                `periodFrom` TEXT NOT NULL,
+                `periodTo` TEXT NOT NULL,
+                `archiveHash` TEXT NOT NULL,
+                `relativePath` TEXT NOT NULL,
+                `ticketCount` INTEGER NOT NULL,
+                `noticeIncluded` INTEGER NOT NULL,
+                PRIMARY KEY(`id`)
+            )
+            """.trimIndent()
+        )
     }
 }
 

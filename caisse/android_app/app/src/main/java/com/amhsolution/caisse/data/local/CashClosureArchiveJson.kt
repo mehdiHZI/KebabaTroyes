@@ -29,7 +29,14 @@ fun CashClosure.toArchiveJsonString(zoneId: ZoneId = ZoneId.systemDefault()): St
             put("type", type.name)
             put("label", type.label)
             put("periodKey", businessDay)
-            put("businessDay", if (type == CashClosureType.DAILY_Z) businessDay else JSONObject.NULL)
+            put(
+                "businessDay",
+                if (type == CashClosureType.DAILY_Z || type == CashClosureType.DAILY_X) {
+                    businessDay
+                } else {
+                    JSONObject.NULL
+                }
+            )
             put("printedAt", closedAt.format(closureDateTimeFormatter))
             put("closedAtEpochMillis", closedAtEpochMillis)
             put("cashier", "Kebaba Caisse")
@@ -59,6 +66,7 @@ fun CashClosure.toArchiveJsonString(zoneId: ZoneId = ZoneId.systemDefault()): St
 
 private fun CashClosureType.archiveDocumentType(): String =
     when (this) {
+        CashClosureType.DAILY_X -> "CASH_CLOSURE_DAILY_X"
         CashClosureType.DAILY_Z -> "CASH_CLOSURE_DAILY_Z"
         CashClosureType.MONTHLY_Z -> "CASH_CLOSURE_MONTHLY_Z"
         CashClosureType.YEARLY_Z -> "CASH_CLOSURE_YEARLY_Z"
@@ -98,5 +106,6 @@ private fun PaymentMethod.closureCode(): String =
         PaymentMethod.ESPECES -> "ESP"
         PaymentMethod.TITRE_RESTAURANT -> "TR"
         PaymentMethod.AUTRE -> "AUTRE"
+        PaymentMethod.AVOIR -> "AVOIR"
         PaymentMethod.ANNULE -> "ANNULE"
     }

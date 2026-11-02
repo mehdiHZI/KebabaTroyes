@@ -58,6 +58,8 @@ import com.amhsolution.caisse.domain.catalog.KebabaOptionCatalog
 import com.amhsolution.caisse.domain.catalog.SampleCatalog
 import com.amhsolution.caisse.domain.catalog.PizzaCatalog
 import com.amhsolution.caisse.domain.catalog.ProductOptionCatalog
+import com.amhsolution.caisse.domain.catalog.VariantProductGroup
+import com.amhsolution.caisse.domain.catalog.VariantProductGroupCatalog
 import com.amhsolution.caisse.domain.formatEuros
 import com.amhsolution.caisse.domain.model.CartLine
 import com.amhsolution.caisse.domain.model.DeliveryInfo
@@ -120,9 +122,18 @@ fun RegisterScreen(
     var kebabaToCustomize by remember { mutableStateOf<Product?>(null) }
     var offerToCustomize by remember { mutableStateOf<Product?>(null) }
     var studentMenuToCustomize by remember { mutableStateOf<Product?>(null) }
+    var variantGroupToPick by remember { mutableStateOf<VariantProductGroup?>(null) }
 
     val products = remember(selectedCategory, catalogProducts) {
-        catalogProducts.filter { it.category == selectedCategory }
+        val groups = VariantProductGroupCatalog.groupsFor(selectedCategory)
+        if (groups.isEmpty()) {
+            catalogProducts.filter { it.category == selectedCategory }
+        } else {
+            VariantProductGroupCatalog.ungroupedProducts(selectedCategory, catalogProducts)
+        }
+    }
+    val variantGroups = remember(selectedCategory) {
+        VariantProductGroupCatalog.groupsFor(selectedCategory)
     }
     val cartTotalCentimes = cartLines.sumOf { it.lineTotalCentimes }
     val deliveryInfo = buildDeliveryInfo(
@@ -208,6 +219,18 @@ fun RegisterScreen(
         )
     }
 
+    variantGroupToPick?.let { group ->
+        VariantPickerDialog(
+            group = group,
+            catalogProducts = catalogProducts,
+            onDismiss = { variantGroupToPick = null },
+            onSelect = { product ->
+                cartLines = addProductToCart(cartLines, product)
+                variantGroupToPick = null
+            }
+        )
+    }
+
     if (showPayment && cartLines.isNotEmpty()) {
         PaymentScreen(
             orderType = selectedOrderType,
@@ -251,6 +274,9 @@ fun RegisterScreen(
                 selectedCategory = selectedCategory,
                 onCategorySelected = { selectedCategory = it },
                 products = products,
+                variantGroups = variantGroups,
+                catalogProducts = catalogProducts,
+                onVariantGroupSelected = { group -> variantGroupToPick = group },
                 onProductSelected = { product ->
                     when {
                         KebabaOptionCatalog.supportsCustomization(product) ->
@@ -330,6 +356,9 @@ private fun RegisterWorkspace(
     selectedCategory: ProductCategory,
     onCategorySelected: (ProductCategory) -> Unit,
     products: List<Product>,
+    variantGroups: List<VariantProductGroup> = emptyList(),
+    catalogProducts: List<Product> = emptyList(),
+    onVariantGroupSelected: (VariantProductGroup) -> Unit = {},
     onProductSelected: (Product) -> Unit,
     orderType: OrderType,
     cartLines: List<CartLine>,
@@ -367,6 +396,9 @@ private fun RegisterWorkspace(
                     )
                     ProductPanel(
                         products = products,
+                        variantGroups = variantGroups,
+                        catalogProducts = catalogProducts,
+                        onVariantGroupSelected = onVariantGroupSelected,
                         onProductSelected = onProductSelected,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -418,6 +450,9 @@ private fun RegisterWorkspace(
                     ) {
                         ProductPanel(
                             products = products,
+                            variantGroups = variantGroups,
+                            catalogProducts = catalogProducts,
+                            onVariantGroupSelected = onVariantGroupSelected,
                             onProductSelected = onProductSelected,
                             modifier = Modifier
                                 .weight(1f)
@@ -464,6 +499,9 @@ private fun RegisterWorkspace(
                     )
                     ProductPanel(
                         products = products,
+                        variantGroups = variantGroups,
+                        catalogProducts = catalogProducts,
+                        onVariantGroupSelected = onVariantGroupSelected,
                         onProductSelected = onProductSelected,
                         modifier = Modifier
                             .weight(1f)
@@ -659,6 +697,9 @@ private fun CategoryButton(
 private fun ProductPanel(
     products: List<Product>,
     onProductSelected: (Product) -> Unit,
+    variantGroups: List<VariantProductGroup> = emptyList(),
+    catalogProducts: List<Product> = emptyList(),
+    onVariantGroupSelected: (VariantProductGroup) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     PanelContainer(
@@ -672,12 +713,61 @@ private fun ProductPanel(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxSize()
         ) {
+            items(variantGroups, key = { "group-${it.id}" }) { group ->
+                VariantGroupCard(
+                    group = group,
+                    catalogProducts = catalogProducts,
+                    onClick = { onVariantGroupSelected(group) }
+                )
+            }
             items(products, key = { it.id }) { product ->
                 ProductCard(
                     product = product,
                     onClick = { onProductSelected(product) }
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun VariantGroupCard(
+    group: VariantProductGroup,
+    catalogProducts: List<Product>,
+    onClick: () -> Unit
+) {
+    val starting = group.startingPriceCentimes(catalogProducts)
+    Card(
+        onClick = onClick,
+        enabled = starting > 0 || group.resolveVariants(catalogProducts).isNotEmpty(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(ProductCardHeight),
+        shape = RoundedCornerShape(9.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, WireframeBorder),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = group.label,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                lineHeight = 15.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = if (starting > 0) "dès ${formatEuros(starting)}" else "Choisir",
+                style = MaterialTheme.typography.labelMedium,
+                color = CaisseMuted,
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }

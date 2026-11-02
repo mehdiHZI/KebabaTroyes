@@ -58,6 +58,10 @@ class TicketSyncRepository(
         }
 
     suspend fun enqueuePaidTicket(record: HistoryRecord) = withContext(Dispatchers.IO) {
+        if (record.isSimulation) {
+            _lastMessage.value = "Ticket FACTICE exclu de la sync production"
+            return@withContext
+        }
         val config = serverConfigRepository.config.first()
         val now = System.currentTimeMillis()
         val payload = record.toSyncPayloadJson(config.registerId)

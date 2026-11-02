@@ -298,7 +298,7 @@ private fun PaymentMethodPanel(
             modifier = Modifier.fillMaxSize()
         ) {
             PaymentMethod.entries
-                .filterNot { it == PaymentMethod.ANNULE }
+                .filterNot { it == PaymentMethod.ANNULE || it == PaymentMethod.AVOIR }
                 .forEach { method ->
                     val selected = method == selectedMethod
                     Card(

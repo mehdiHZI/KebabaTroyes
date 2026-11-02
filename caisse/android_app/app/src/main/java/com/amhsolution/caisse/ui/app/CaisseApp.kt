@@ -71,8 +71,6 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.util.UUID
 
-private const val ClosureAccessPassword = "1234"
-
 private fun requiresBluetooth(vararg endpoints: ConfiguredPrinter): Boolean =
     endpoints.any { it.linkType == PrinterLinkType.BLUETOOTH }
 
@@ -204,6 +202,9 @@ fun CaisseApp() {
     if (showClosurePasswordDialog) {
         ClosurePasswordDialog(
             onDismiss = { showClosurePasswordDialog = false },
+            onValidate = { pin ->
+                container.responsibleAuthRepository.verifyOrBootstrap(pin)
+            },
             onValidated = {
                 showClosurePasswordDialog = false
                 currentDestination = HomeDestination.ClosureArchive
@@ -558,20 +559,33 @@ fun CaisseApp() {
             val isTicketClosed = displayedCashClosures.any { closure ->
                 closure.locksTickets && closure.businessDay == record.businessDay
             }
+            val creditAlreadyIssued = historyRecords.any {
+                it.isCorrection && it.linkedTicketId == record.id
+            }
             HistoryTicketDetailScreen(
                 record = record,
                 onBack = { selectedHistoryId = null },
                 onPrintTicket = {
                     printChoiceRequest = PrintChoiceRequest.PaidTicket(record)
                 },
-                onSavePayments = { payments ->
+                onIssueCreditNote = {
                     scope.launch {
-                        if (!isTicketClosed) {
-                            historyRepository.updatePayments(historyId, payments)
+                        runCatching {
+                            val credit = historyRepository.insertCreditNote(historyId)
+                            try {
+                                ticketSyncRepository.enqueuePaidTicket(credit)
+                            } catch (_: Exception) {
+                                // outbox retentera
+                            }
+                            credit
+                        }.onFailure { error ->
+                            printMessage = error.message
+                                ?: "Impossible d'emettre l'avoir."
                         }
                         selectedHistoryId = null
                     }
                 },
+                creditNoteAlreadyIssued = creditAlreadyIssued,
                 isLocked = isTicketClosed
             )
             return
@@ -581,15 +595,24 @@ fun CaisseApp() {
     }
 
     when (currentDestination) {
-        null -> HomeScreen(
-            syncStatus = syncStatus,
-            onActionSelected = { destination ->
-                when (destination) {
-                    HomeDestination.ClosureArchive -> showClosurePasswordDialog = true
-                    else -> currentDestination = destination
+        null -> {
+            val simulationEnabled by container.simulationEnabled.collectAsStateWithLifecycle()
+            HomeScreen(
+                syncStatus = syncStatus,
+                simulationEnabled = simulationEnabled,
+                onToggleSimulation = {
+                    scope.launch {
+                        container.simulationModeRepository.setEnabled(!simulationEnabled)
+                    }
+                },
+                onActionSelected = { destination ->
+                    when (destination) {
+                        HomeDestination.ClosureArchive -> showClosurePasswordDialog = true
+                        else -> currentDestination = destination
+                    }
                 }
-            }
-        )
+            )
+        }
 
         HomeDestination.Register -> RegisterScreen(
             onBack = {
@@ -694,14 +717,14 @@ fun CaisseApp() {
         )
 
         HomeDestination.Statistics -> StatisticsScreen(
-            records = historyRecords,
+            records = historyRecords.filterNot { it.isSimulation },
             closures = displayedCashClosures,
             closureErrorMessage = closureErrorMessage,
             onBack = { currentDestination = null },
-            onCloseBusinessDay = { businessDay ->
+            onCreateRapportX = { businessDay ->
                 scope.launch {
                     runCatching {
-                        cashClosureRepository.createManualDailyClosure(
+                        cashClosureRepository.createRapportX(
                             records = historyRecords,
                             businessDay = businessDay
                         )
@@ -712,7 +735,25 @@ fun CaisseApp() {
                                 it.businessDay == closure.businessDay && it.type == closure.type
                             } + closure
                     }.onFailure { error ->
-                        closureErrorMessage = error.message ?: "La cloture n'a pas pu etre enregistree."
+                        closureErrorMessage = error.message ?: "Le rapport X n'a pas pu etre enregistre."
+                    }
+                }
+            },
+            onCreateFinalZ = { businessDay ->
+                scope.launch {
+                    runCatching {
+                        cashClosureRepository.createFinalDailyZ(
+                            records = historyRecords,
+                            businessDay = businessDay
+                        )
+                    }.onSuccess { closure ->
+                        closureErrorMessage = null
+                        localCashClosures = localCashClosures
+                            .filterNot {
+                                it.businessDay == closure.businessDay && it.type == closure.type
+                            } + closure
+                    }.onFailure { error ->
+                        closureErrorMessage = error.message ?: "La cloture Z n'a pas pu etre enregistree."
                     }
                 }
             }
@@ -892,14 +933,16 @@ private fun PrintTicketChoiceDialog(
 @Composable
 private fun ClosurePasswordDialog(
     onDismiss: () -> Unit,
+    onValidate: suspend (String) -> Boolean,
     onValidated: () -> Unit
 ) {
     var password by remember { mutableStateOf("") }
     var hasError by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Accès clôture") },
+        title = { Text("Accès responsable") },
         text = {
             OutlinedTextField(
                 value = password,
@@ -907,14 +950,14 @@ private fun ClosurePasswordDialog(
                     password = it
                     hasError = false
                 },
-                label = { Text("Mot de passe") },
+                label = { Text("PIN responsable") },
                 singleLine = true,
                 isError = hasError,
                 supportingText = {
                     if (hasError) {
-                        Text("Mot de passe incorrect.")
+                        Text("PIN incorrect.")
                     } else {
-                        Text("Accès réservé à la clôture de caisse.")
+                        Text("PIN 4 a 12 chiffres. Au premier acces, ce PIN est enregistre (hashé).")
                     }
                 },
                 visualTransformation = PasswordVisualTransformation(),
@@ -924,10 +967,9 @@ private fun ClosurePasswordDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    if (password == ClosureAccessPassword) {
-                        onValidated()
-                    } else {
-                        hasError = true
+                    scope.launch {
+                        val ok = onValidate(password)
+                        if (ok) onValidated() else hasError = true
                     }
                 }
             ) {

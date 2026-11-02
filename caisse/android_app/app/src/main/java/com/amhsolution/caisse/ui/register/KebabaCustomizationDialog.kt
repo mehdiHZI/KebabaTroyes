@@ -15,10 +15,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -38,6 +36,7 @@ import com.amhsolution.caisse.domain.catalog.KebabaOptionCatalog
 import com.amhsolution.caisse.domain.formatEuros
 import com.amhsolution.caisse.domain.model.IngredientSelection
 import com.amhsolution.caisse.domain.model.Product
+import com.amhsolution.caisse.domain.model.ProductCategory
 import com.amhsolution.caisse.domain.model.ProductCustomization
 import com.amhsolution.caisse.domain.model.SupplementSelection
 import com.amhsolution.caisse.ui.theme.CaisseMuted
@@ -65,9 +64,12 @@ fun KebabaCustomizationDialog(
     val hasCrudites = KebabaOptionCatalog.hasCrudites(product)
     val hasSauces = KebabaOptionCatalog.hasSauces(product)
     val hasSupplements = KebabaOptionCatalog.hasSupplements(product)
+    val hasTakosMeats = KebabaOptionCatalog.hasTakosMeats(product)
+    val takosMeatCount = KebabaOptionCatalog.takosRequiredMeatCount(product)
     val supportsMenu = KebabaOptionCatalog.supportsMenuToggle(product)
     val supportsDrinkPlus = KebabaOptionCatalog.supportsDrinkPlus(product)
     val menuPrice = KebabaOptionCatalog.menuPriceCentimes(product)
+    val isCategoryMenu = product.category == ProductCategory.MENUS
 
     var asMenu by remember(product.id) { mutableStateOf(false) }
     var painId by remember(product.id) {
@@ -76,13 +78,24 @@ fun KebabaCustomizationDialog(
     var fritesId by remember(product.id) {
         mutableStateOf(KebabaOptionCatalog.fritesEtape.firstOrNull()?.id.orEmpty())
     }
+    var menuDrinkId by remember(product.id) {
+        mutableStateOf(KebabaOptionCatalog.menuDrinks.firstOrNull()?.id.orEmpty())
+    }
     var cruditeIds by remember(product.id) { mutableStateOf(setOf("complet") + CRUDITE_INGREDIENTS) }
     var sauceIds by remember(product.id) { mutableStateOf(setOf<String>()) }
     var supplementIds by remember(product.id) { mutableStateOf(setOf<String>()) }
-    var drinkPlus by remember(product.id) { mutableStateOf(false) }
+    var meatIds by remember(product.id) { mutableStateOf(setOf<String>()) }
+    var takosMeatIds by remember(product.id) { mutableStateOf(setOf<String>()) }
+    /** Bowl / assiette : null = sans boisson ; sinon id soft +1 €. */
+    var bowlDrinkId by remember(product.id) { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
 
-    val showFritesStep = hasFrites && (asMenu || product.category == com.amhsolution.caisse.domain.model.ProductCategory.MENUS)
+    val showMenuFormatStep = supportsMenu && menuPrice != null
+    val showFritesStep = hasFrites && (asMenu || isCategoryMenu)
+    val showMenuDrinkStep = showFritesStep && !isCategoryMenu
+    val showMeatPicker =
+        KebabaOptionCatalog.SUP_VIANDE_ID in supplementIds || meatIds.isNotEmpty()
+
     val menuExtra =
         if (asMenu && menuPrice != null) menuPrice - product.priceCentimes else 0
     val fritesExtra =
@@ -91,12 +104,25 @@ fun KebabaCustomizationDialog(
         } else {
             0
         }
-    val supplementsExtra = supplementIds.sumOf { id ->
-        KebabaOptionCatalog.supplements.firstOrNull { it.id == id }?.priceCentimes ?: 0
-    }
+    val supplementsExtra = supplementIds
+        .filterNot { it == KebabaOptionCatalog.SUP_VIANDE_ID }
+        .sumOf { id ->
+            KebabaOptionCatalog.supplements.firstOrNull { it.id == id }?.priceCentimes ?: 0
+        } + meatIds.size * KebabaOptionCatalog.SUP_VIANDE_CENTS
     val saucesExtra = KebabaOptionCatalog.sauceExtraCentimes(sauceIds.size)
-    val drinkExtra = if (drinkPlus) KebabaOptionCatalog.BOWL_ASSIETTE_DRINK_CENTS else 0
+    val drinkExtra =
+        if (supportsDrinkPlus && bowlDrinkId != null) {
+            KebabaOptionCatalog.BOWL_ASSIETTE_DRINK_CENTS
+        } else {
+            0
+        }
     val total = product.priceCentimes + menuExtra + fritesExtra + supplementsExtra + saucesExtra + drinkExtra
+
+    var stepNumber = 0
+    fun nextStepLabel(label: String): String {
+        stepNumber += 1
+        return "$stepNumber · $label"
+    }
 
     fun toggleCrudite(id: String) {
         error = null
@@ -121,7 +147,35 @@ fun KebabaCustomizationDialog(
 
     fun toggleSupplement(id: String) {
         error = null
+        if (id == KebabaOptionCatalog.SUP_VIANDE_ID) {
+            if (id in supplementIds) {
+                supplementIds = supplementIds - id
+                meatIds = emptySet()
+            } else {
+                supplementIds = supplementIds + id
+            }
+            return
+        }
         supplementIds = if (id in supplementIds) supplementIds - id else supplementIds + id
+    }
+
+    fun toggleMeat(id: String) {
+        error = null
+        meatIds = if (id in meatIds) meatIds - id else meatIds + id
+        supplementIds = if (meatIds.isEmpty()) {
+            supplementIds - KebabaOptionCatalog.SUP_VIANDE_ID
+        } else {
+            supplementIds + KebabaOptionCatalog.SUP_VIANDE_ID
+        }
+    }
+
+    fun toggleTakosMeat(id: String) {
+        error = null
+        takosMeatIds = when {
+            id in takosMeatIds -> takosMeatIds - id
+            takosMeatIds.size >= takosMeatCount -> takosMeatIds
+            else -> takosMeatIds + id
+        }
     }
 
     fun validate(): Boolean {
@@ -129,8 +183,24 @@ fun KebabaCustomizationDialog(
             error = "Choisissez un pain."
             return false
         }
+        if (hasTakosMeats && takosMeatIds.size != takosMeatCount) {
+            error = "Choisissez $takosMeatCount viande${if (takosMeatCount > 1) "s" else ""}."
+            return false
+        }
         if (hasCrudites && cruditeIds.isEmpty()) {
             error = "Sélectionnez vos garnitures (ou sans crudités)."
+            return false
+        }
+        if (KebabaOptionCatalog.SUP_VIANDE_ID in supplementIds && meatIds.isEmpty()) {
+            error = "Choisissez au moins une viande en supplément."
+            return false
+        }
+        if (showFritesStep && fritesId.isBlank()) {
+            error = "Choisissez vos frites."
+            return false
+        }
+        if (showMenuDrinkStep && menuDrinkId.isBlank()) {
+            error = "Choisissez une boisson pour le menu."
             return false
         }
         if (hasSauces && sauceIds.isEmpty()) {
@@ -147,16 +217,38 @@ fun KebabaCustomizationDialog(
             val pain = KebabaOptionCatalog.pains.first { it.id == painId }
             added += SupplementSelection(pain.id, "Pain ${pain.label}", 0)
         }
+        if (asMenu && menuExtra > 0) {
+            added += SupplementSelection(
+                KebabaOptionCatalog.MENU_OPTION_ID,
+                "Menu (frites + boisson)",
+                menuExtra
+            )
+        }
+        takosMeatIds.forEach { id ->
+            val meat = KebabaOptionCatalog.takosMeats.first { it.id == id }
+            added += SupplementSelection(
+                id = "takos-${meat.id}",
+                label = meat.label,
+                priceCentimes = 0
+            )
+        }
+        supplementIds
+            .filterNot { it == KebabaOptionCatalog.SUP_VIANDE_ID }
+            .forEach { id ->
+                val s = KebabaOptionCatalog.supplements.first { it.id == id }
+                added += SupplementSelection(s.id, s.label, s.priceCentimes)
+            }
+        meatIds.forEach { id ->
+            val meat = KebabaOptionCatalog.supplementMeats.first { it.id == id }
+            added += SupplementSelection(
+                id = "sup-viande-${meat.id}",
+                label = "Viande ${meat.label}",
+                priceCentimes = KebabaOptionCatalog.SUP_VIANDE_CENTS
+            )
+        }
         if (showFritesStep) {
             val f = KebabaOptionCatalog.fritesEtape.first { it.id == fritesId }
             added += SupplementSelection(f.id, "Frites ${f.label}", f.priceCentimes)
-        }
-        if (asMenu && menuExtra > 0) {
-            added += SupplementSelection("option-menu", "Menu", menuExtra)
-        }
-        supplementIds.forEach { id ->
-            val s = KebabaOptionCatalog.supplements.first { it.id == id }
-            added += SupplementSelection(s.id, s.label, s.priceCentimes)
         }
         sauceIds.forEachIndexed { index, id ->
             val s = KebabaOptionCatalog.sauces.first { it.id == id }
@@ -181,10 +273,19 @@ fun KebabaCustomizationDialog(
                     IngredientSelection(id, label)
                 }
         }
-        val drink = if (drinkPlus) {
-            IngredientSelection("boisson-plus", "Boisson +1 €")
-        } else {
-            null
+        val drink = when {
+            showMenuDrinkStep -> {
+                val d = KebabaOptionCatalog.menuDrinks.first { it.id == menuDrinkId }
+                IngredientSelection(d.id, d.label)
+            }
+            supportsDrinkPlus && bowlDrinkId != null -> {
+                val d = KebabaOptionCatalog.menuDrinks.first { it.id == bowlDrinkId }
+                IngredientSelection(
+                    id = d.id,
+                    label = "${d.label} (+${formatEuros(KebabaOptionCatalog.BOWL_ASSIETTE_DRINK_CENTS)})"
+                )
+            }
+            else -> null
         }
         return ProductCustomization(
             removedIngredients = removed,
@@ -222,27 +323,25 @@ fun KebabaCustomizationDialog(
                     color = CaisseMuted
                 )
 
-                if (supportsMenu && menuPrice != null) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column {
-                            Text("Menu", fontWeight = FontWeight.SemiBold, color = KebabaBordeaux)
-                            Text(
-                                "Seul ${formatEuros(product.priceCentimes)} · Menu ${formatEuros(menuPrice)}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = CaisseMuted
-                            )
+                if (showMenuFormatStep && menuPrice != null) {
+                    StepTitle(nextStepLabel("Seul ou Menu"))
+                    Text(
+                        text = "Seul ${formatEuros(product.priceCentimes)} · Menu ${formatEuros(menuPrice)} (frites + boisson)",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = CaisseMuted
+                    )
+                    OptionChips(
+                        options = KebabaOptionCatalog.formatOptions,
+                        selectedIds = setOf(if (asMenu) "format-menu" else "format-seul"),
+                        onToggle = { id ->
+                            error = null
+                            asMenu = id == "format-menu"
                         }
-                        Switch(checked = asMenu, onCheckedChange = { asMenu = it })
-                    }
-                    HorizontalDivider(color = WireframeBorder.copy(alpha = 0.25f))
+                    )
                 }
 
                 if (hasPain) {
-                    StepTitle("1 · Choisi ton pain")
+                    StepTitle(nextStepLabel("Choisi ton pain"))
                     OptionChips(
                         options = KebabaOptionCatalog.pains,
                         selectedIds = setOf(painId),
@@ -250,18 +349,22 @@ fun KebabaCustomizationDialog(
                     )
                 }
 
-                if (showFritesStep) {
-                    StepTitle("2 · Choisi tes frites")
+                if (hasTakosMeats) {
+                    StepTitle(nextStepLabel("Choisi tes viandes"))
+                    Text(
+                        text = "${takosMeatIds.size} / $takosMeatCount sélectionnée${if (takosMeatCount > 1) "s" else ""}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = CaisseMuted
+                    )
                     OptionChips(
-                        options = KebabaOptionCatalog.fritesEtape,
-                        selectedIds = setOf(fritesId),
-                        onToggle = { fritesId = it },
-                        showPrice = true
+                        options = KebabaOptionCatalog.takosMeats,
+                        selectedIds = takosMeatIds,
+                        onToggle = { toggleTakosMeat(it) }
                     )
                 }
 
                 if (hasCrudites) {
-                    StepTitle("3 · Choisi tes garnitures")
+                    StepTitle(nextStepLabel("Choisi tes garnitures"))
                     OptionChips(
                         options = KebabaOptionCatalog.crudites,
                         selectedIds = cruditeIds,
@@ -270,17 +373,49 @@ fun KebabaCustomizationDialog(
                 }
 
                 if (hasSupplements) {
-                    StepTitle("4 · Choisi tes suppléments")
+                    StepTitle(nextStepLabel("Choisi tes suppléments"))
                     OptionChips(
                         options = KebabaOptionCatalog.supplements,
                         selectedIds = supplementIds,
                         onToggle = { toggleSupplement(it) },
                         showPrice = true
                     )
+                    if (showMeatPicker) {
+                        Text(
+                            text = "Viandes (+${formatEuros(KebabaOptionCatalog.SUP_VIANDE_CENTS)} chacune · autant que tu veux)",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = CaisseMuted
+                        )
+                        OptionChips(
+                            options = KebabaOptionCatalog.supplementMeats,
+                            selectedIds = meatIds,
+                            onToggle = { toggleMeat(it) },
+                            showPrice = true
+                        )
+                    }
+                }
+
+                if (showFritesStep) {
+                    StepTitle(nextStepLabel("Choisi tes frites"))
+                    OptionChips(
+                        options = KebabaOptionCatalog.fritesEtape,
+                        selectedIds = setOf(fritesId),
+                        onToggle = { fritesId = it },
+                        showPrice = true
+                    )
+                }
+
+                if (showMenuDrinkStep) {
+                    StepTitle(nextStepLabel("Choisi ta boisson"))
+                    OptionChips(
+                        options = KebabaOptionCatalog.menuDrinks,
+                        selectedIds = setOf(menuDrinkId),
+                        onToggle = { menuDrinkId = it }
+                    )
                 }
 
                 if (hasSauces) {
-                    StepTitle("5 · Choisi 2 sauces maximum")
+                    StepTitle(nextStepLabel("Choisi 2 sauces maximum"))
                     Text(
                         text = "${KebabaOptionCatalog.MAX_INCLUDED_SAUCES} incluses · +${formatEuros(KebabaOptionCatalog.EXTRA_SAUCE_CENTS)} ensuite",
                         style = MaterialTheme.typography.bodySmall,
@@ -294,18 +429,25 @@ fun KebabaCustomizationDialog(
                 }
 
                 if (supportsDrinkPlus) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            "Boisson +${formatEuros(KebabaOptionCatalog.BOWL_ASSIETTE_DRINK_CENTS)}",
-                            fontWeight = FontWeight.SemiBold,
-                            color = KebabaBordeaux
-                        )
-                        Switch(checked = drinkPlus, onCheckedChange = { drinkPlus = it })
-                    }
+                    StepTitle(nextStepLabel("Boisson"))
+                    Text(
+                        text = "Optionnelle · +${formatEuros(KebabaOptionCatalog.BOWL_ASSIETTE_DRINK_CENTS)} si tu en choisis une",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = CaisseMuted
+                    )
+                    OptionChips(
+                        options = listOf(
+                            KebabaOption("sans-boisson", "Sans boisson", 0)
+                        ) + KebabaOptionCatalog.menuDrinks.map {
+                            it.copy(priceCentimes = KebabaOptionCatalog.BOWL_ASSIETTE_DRINK_CENTS)
+                        },
+                        selectedIds = setOf(bowlDrinkId ?: "sans-boisson"),
+                        onToggle = { id ->
+                            error = null
+                            bowlDrinkId = if (id == "sans-boisson") null else id
+                        },
+                        showPrice = true
+                    )
                 }
 
                 error?.let {

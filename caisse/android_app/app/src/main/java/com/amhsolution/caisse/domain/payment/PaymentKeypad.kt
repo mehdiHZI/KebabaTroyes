@@ -45,6 +45,7 @@ fun buildPaymentRecord(
             )
         }
 
+        PaymentMethod.AVOIR -> null
         PaymentMethod.ANNULE -> null
 
         else -> PaymentRecord(
@@ -63,6 +64,7 @@ fun formatPaymentsSummary(payments: List<PaymentRecord>): String {
             PaymentMethod.CARTE_BANCAIRE -> "CB"
             PaymentMethod.TITRE_RESTAURANT -> "TR"
             PaymentMethod.AUTRE -> "Autre"
+            PaymentMethod.AVOIR -> "Avoir"
             PaymentMethod.ANNULE -> "Annulé"
         }
         val euros = payment.amountCentimes / 100
