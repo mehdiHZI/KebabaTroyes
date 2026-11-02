@@ -1,6 +1,10 @@
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { orderEvents, orderItems, orders } from "@/db/schema";
+import {
+  priceOrderLines,
+  type RawOrderLine,
+} from "@/lib/pricing";
 
 export type OrderListItem = {
   id: string;
@@ -105,24 +109,17 @@ export type CreateOrderInput = {
   userId: string;
   paymentMode: "on_site" | "online";
   pickupSlotStart?: Date | null;
-  lines: {
-    productId: string;
-    name: string;
-    unitPriceCents: number;
-    quantity: number;
-    options: { optionId: string; name: string; priceCents: number }[];
-  }[];
+  lines: RawOrderLine[];
 };
 
-export async function createOrder(input: CreateOrderInput): Promise<{ id: string; publicNumber: string }> {
-  if (input.lines.length === 0) {
-    throw new Error("EMPTY_CART");
-  }
+export async function createOrder(input: CreateOrderInput): Promise<{
+  id: string;
+  publicNumber: string;
+  totalCents: number;
+}> {
+  const priced = await priceOrderLines(input.lines);
 
-  const subtotalCents = input.lines.reduce((sum, line) => {
-    const opts = line.options.reduce((s, o) => s + o.priceCents, 0);
-    return sum + (line.unitPriceCents + opts) * line.quantity;
-  }, 0);
+  const subtotalCents = priced.reduce((sum, line) => sum + line.lineTotalCents, 0);
 
   const paymentMode = input.paymentMode;
   const paymentStatus =
@@ -147,27 +144,27 @@ export async function createOrder(input: CreateOrderInput): Promise<{ id: string
   });
 
   await db.insert(orderItems).values(
-    input.lines.map((line) => {
-      const opts = line.options.reduce((s, o) => s + o.priceCents, 0);
-      const lineTotal = (line.unitPriceCents + opts) * line.quantity;
-      return {
-        orderId: id,
-        productId: line.productId,
-        productName: line.name,
-        unitPriceCents: line.unitPriceCents,
-        quantity: line.quantity,
-        lineTotalCents: lineTotal,
-        optionsJson: line.options,
-      };
-    }),
+    priced.map((line) => ({
+      orderId: id,
+      productId: line.productId,
+      productName: line.productName,
+      unitPriceCents: line.unitPriceCents,
+      quantity: line.quantity,
+      lineTotalCents: line.lineTotalCents,
+      optionsJson: line.options.map((o) => ({
+        optionId: o.optionId,
+        name: o.name,
+        priceCents: o.priceCents,
+      })),
+    })),
   );
 
   await db.insert(orderEvents).values({
     orderId: id,
     type: "order_created",
     actor: "customer",
-    payload: { paymentMode, status },
+    payload: { paymentMode, status, totalCents: subtotalCents },
   });
 
-  return { id, publicNumber: number };
+  return { id, publicNumber: number, totalCents: subtotalCents };
 }

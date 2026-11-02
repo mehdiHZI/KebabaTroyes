@@ -58,16 +58,11 @@ export function CheckoutForm({ userName }: Props) {
         body: JSON.stringify({
           paymentMode: "on_site",
           pickupSlotStart: slot || null,
+          // Prix / libellés recalculés côté serveur depuis le catalogue.
           lines: lines.map((l) => ({
             productId: l.productId,
-            name: l.name,
-            unitPriceCents: l.unitPriceCents,
             quantity: l.quantity,
-            options: l.options.map((o) => ({
-              optionId: o.optionId,
-              name: o.name,
-              priceCents: o.priceCents,
-            })),
+            optionIds: l.options.map((o) => o.optionId),
           })),
         }),
       });
