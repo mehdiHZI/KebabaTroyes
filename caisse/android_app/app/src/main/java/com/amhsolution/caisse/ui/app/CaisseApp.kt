@@ -69,7 +69,6 @@ import com.amhsolution.caisse.ui.prices.PriceManagementScreen
 import com.amhsolution.caisse.ui.register.RegisterScreen
 import com.amhsolution.caisse.ui.settings.ServerSettingsScreen
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.UUID
