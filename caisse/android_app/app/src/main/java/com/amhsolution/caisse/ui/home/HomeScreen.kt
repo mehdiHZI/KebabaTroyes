@@ -50,6 +50,7 @@ enum class HomeDestination {
     Statistics,
     PriceManagement,
     PrinterSettings,
+    ServerSettings,
     ClosureArchive
 }
 
@@ -127,6 +128,9 @@ private fun WireframeHomeLayout(
             NavButton("Imprimantes", Modifier.weight(1f)) {
                 onActionSelected(HomeDestination.PrinterSettings)
             }
+            NavButton("Serveur", Modifier.weight(1f)) {
+                onActionSelected(HomeDestination.ServerSettings)
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -198,8 +202,13 @@ private fun CompactHomeLayout(
                 onActionSelected(HomeDestination.ClosureArchive)
             }
         }
-        NavButton("Imprimantes", Modifier.fillMaxWidth()) {
-            onActionSelected(HomeDestination.PrinterSettings)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            NavButton("Imprimantes", Modifier.weight(1f)) {
+                onActionSelected(HomeDestination.PrinterSettings)
+            }
+            NavButton("Serveur", Modifier.weight(1f)) {
+                onActionSelected(HomeDestination.ServerSettings)
+            }
         }
 
         CaisseButton(

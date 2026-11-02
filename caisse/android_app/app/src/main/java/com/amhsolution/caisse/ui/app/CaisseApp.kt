@@ -63,10 +63,13 @@ import com.amhsolution.caisse.ui.orders.HistoryScreen
 import com.amhsolution.caisse.ui.orders.HistoryTicketDetailScreen
 import com.amhsolution.caisse.ui.orders.PendingOrdersScreen
 import com.amhsolution.caisse.ui.payment.PaymentScreen
+import com.amhsolution.caisse.data.sync.ServerConfig
 import com.amhsolution.caisse.ui.printers.PrinterSettingsScreen
 import com.amhsolution.caisse.ui.prices.PriceManagementScreen
 import com.amhsolution.caisse.ui.register.RegisterScreen
+import com.amhsolution.caisse.ui.settings.ServerSettingsScreen
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.UUID
@@ -105,6 +108,8 @@ fun CaisseApp() {
     val pizzaSizeOffsets by container.pizzaSizeOffsets.collectAsStateWithLifecycle()
     val productSupplementPrices by container.productSupplementPrices.collectAsStateWithLifecycle()
     val syncStatus by container.syncStatus.collectAsStateWithLifecycle()
+    val serverConfig by container.serverConfigRepository.config
+        .collectAsStateWithLifecycle(initialValue = ServerConfig("", "", "caisse-1"))
     val ticketSyncRepository = container.ticketSyncRepository
     val remoteOrdersRepository = container.remoteOrdersRepository
 
@@ -848,6 +853,18 @@ fun CaisseApp() {
             onSave = { settings: PrinterRoutingSettings ->
                 printerSettingsRepository.save(settings)
                 printerSettings = settings
+            },
+            onBack = { currentDestination = null }
+        )
+
+        HomeDestination.ServerSettings -> ServerSettingsScreen(
+            initialConfig = serverConfig,
+            onSave = { baseUrl, apiToken, registerId ->
+                container.serverConfigRepository.update(
+                    baseUrl = baseUrl,
+                    apiToken = apiToken,
+                    registerId = registerId
+                )
             },
             onBack = { currentDestination = null }
         )

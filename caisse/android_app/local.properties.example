@@ -1,5 +1,5 @@
-## Copier vers local.properties (non versionné) pour brancher l'API VPS.
-## Android Studio génère déjà local.properties avec sdk.dir — ajouter les lignes ci-dessous.
+## Optionnel au build. Préférable : écran Accueil → Serveur (URL + token) sur la tablette.
+## Copier vers local.properties (non versionné) si tu veux préremplir au compile.
 
 # sdk.dir=/chemin/vers/Android/sdk
 
