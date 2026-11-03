@@ -138,6 +138,7 @@ class AppContainer(context: Context) {
             }
         }
         scope.launch {
+            runCatching { ticketSyncRepository.probeAuth() }
             while (true) {
                 try {
                     ticketSyncRepository.flush()
@@ -145,6 +146,7 @@ class AppContainer(context: Context) {
                     // retry later
                 }
                 kotlinx.coroutines.delay(30_000)
+                runCatching { ticketSyncRepository.probeAuth() }
             }
         }
     }

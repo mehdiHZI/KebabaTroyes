@@ -37,13 +37,17 @@ class TicketSyncRepository(
     private val _lastMessage = MutableStateFlow<String?>(null)
     val lastMessage: StateFlow<String?> = _lastMessage.asStateFlow()
 
+    /** null = pas encore testé ; false = Bearer refusé (401). */
+    private val _authOk = MutableStateFlow<Boolean?>(null)
+
     val status: Flow<SyncStatusSnapshot> =
         combine(
             serverConfigRepository.config,
             outboxDao.observePendingCount(),
             outboxDao.observeErrorCount(),
-            _lastMessage
-        ) { config, pending, errors, message ->
+            _lastMessage,
+            _authOk
+        ) { config, pending, errors, message, authOk ->
             when {
                 !config.isConfigured -> SyncStatusSnapshot(
                     SyncUiState.DISABLED,
@@ -51,11 +55,43 @@ class TicketSyncRepository(
                     errors,
                     "API non configurée"
                 )
+                authOk == false -> SyncStatusSnapshot(
+                    SyncUiState.ERROR,
+                    pending,
+                    errors,
+                    message ?: "Token API refusé (401) — rouvrir Serveur"
+                )
                 errors > 0 -> SyncStatusSnapshot(SyncUiState.ERROR, pending, errors, message)
                 pending > 0 -> SyncStatusSnapshot(SyncUiState.PENDING, pending, errors, message)
                 else -> SyncStatusSnapshot(SyncUiState.OK, 0, 0, message ?: "Synchronisé")
             }
         }
+
+    /** Vérifie réellement le Bearer (pas seulement /health). */
+    suspend fun probeAuth(): Boolean = withContext(Dispatchers.IO) {
+        val config = serverConfigRepository.config.first()
+        if (!config.isConfigured) {
+            _authOk.value = null
+            return@withContext false
+        }
+        when (val result = apiClient.testConnection(config)) {
+            CaisseApiResult.Success -> {
+                _authOk.value = true
+                if (_lastMessage.value.isNullOrBlank() ||
+                    _lastMessage.value?.contains("401") == true ||
+                    _lastMessage.value?.contains("Token") == true
+                ) {
+                    _lastMessage.value = "Auth OK"
+                }
+                true
+            }
+            is CaisseApiResult.Failure -> {
+                _authOk.value = false
+                _lastMessage.value = result.message
+                false
+            }
+        }
+    }
 
     suspend fun enqueuePaidTicket(record: HistoryRecord) = withContext(Dispatchers.IO) {
         if (record.isSimulation) {

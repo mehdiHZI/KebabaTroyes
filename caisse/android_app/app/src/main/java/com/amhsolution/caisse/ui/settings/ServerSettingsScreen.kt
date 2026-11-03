@@ -143,7 +143,14 @@ fun ServerSettingsScreen(
                         }
                     },
                     supportingText = {
-                        Text("Identique à CAISSE_API_TOKEN sur le VPS")
+                        val len = apiToken.trim().length
+                        Text(
+                            if (len == 0) {
+                                "Identique à CAISSE_API_TOKEN sur le VPS (64 caractères)"
+                            } else {
+                                "Longueur $len — attendu 64. Préfixe : ${apiToken.trim().take(4)}…"
+                            }
+                        )
                     }
                 )
 
