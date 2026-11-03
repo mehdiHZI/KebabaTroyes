@@ -44,7 +44,7 @@ class CaisseApiClient(
         val url = "${config.baseUrl.trimEnd('/')}/v1/tickets"
         val request = Request.Builder()
             .url(url)
-            .header("Authorization", "Bearer ${config.apiToken}")
+            .header("Authorization", "Bearer ${config.apiToken.trim()}")
             .header("Accept", "application/json")
             .post(payloadJson.toRequestBody(jsonMedia))
             .build()
@@ -54,7 +54,7 @@ class CaisseApiClient(
                 when (response.code) {
                     200, 201 -> CaisseApiResult.Success
                     401, 403 -> CaisseApiResult.Failure(
-                        "Auth API refusée (${response.code})",
+                        "Auth refusée (${response.code}) — vérifiez le token Serveur.",
                         retryable = false
                     )
                     400 -> CaisseApiResult.Failure(
@@ -90,13 +90,56 @@ class CaisseApiClient(
         }
     }
 
+    /**
+     * Test complet : /health (réseau) puis /v1/catalog (Bearer).
+     * Ne pas se fier à /health seul — il n'exige pas le token.
+     */
+    fun testConnection(config: ServerConfig): CaisseApiResult {
+        if (config.baseUrl.isBlank()) {
+            return CaisseApiResult.Failure("URL absente", retryable = false)
+        }
+        if (config.apiToken.isBlank()) {
+            return CaisseApiResult.Failure(
+                "Token vide — collez le CAISSE_API_TOKEN puis Enregistrer.",
+                retryable = false
+            )
+        }
+        val healthResult = health(config)
+        if (healthResult is CaisseApiResult.Failure) return healthResult
+
+        val request = Request.Builder()
+            .url("${config.baseUrl.trimEnd('/')}/v1/catalog")
+            .header("Authorization", "Bearer ${config.apiToken.trim()}")
+            .header("Accept", "application/json")
+            .get()
+            .build()
+        return try {
+            httpClient.newCall(request).execute().use { response ->
+                when (response.code) {
+                    200 -> CaisseApiResult.Success
+                    401, 403 -> CaisseApiResult.Failure(
+                        "Token refusé (${response.code}) — mauvais token ou pas Enregistré. " +
+                            "Longueur actuelle : ${config.apiToken.trim().length} (attendu 64).",
+                        retryable = false
+                    )
+                    else -> CaisseApiResult.Failure(
+                        "HTTP ${response.code}",
+                        retryable = response.code >= 500 || response.code == 429
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            CaisseApiResult.Failure(e.toCaisseNetworkMessage(), retryable = true)
+        }
+    }
+
     fun fetchCatalog(config: ServerConfig): CatalogFetchResult {
         if (!config.isConfigured) {
             return CatalogFetchResult.Failure("API non configurée", retryable = false)
         }
         val request = Request.Builder()
             .url("${config.baseUrl.trimEnd('/')}/v1/catalog")
-            .header("Authorization", "Bearer ${config.apiToken}")
+            .header("Authorization", "Bearer ${config.apiToken.trim()}")
             .header("Accept", "application/json")
             .get()
             .build()
@@ -114,7 +157,8 @@ class CaisseApiClient(
                         )
                     }
                     401, 403 -> CatalogFetchResult.Failure(
-                        "Auth API refusée (${response.code})",
+                        "Auth refusée (${response.code}) — token incorrect ou non enregistré " +
+                            "(longueur ${config.apiToken.trim().length}, attendu 64).",
                         retryable = false
                     )
                     else -> CatalogFetchResult.Failure(
@@ -135,7 +179,7 @@ class CaisseApiClient(
         val payload = product.toJsonObject().toString()
         val request = Request.Builder()
             .url("${config.baseUrl.trimEnd('/')}/v1/catalog/products/${product.id}")
-            .header("Authorization", "Bearer ${config.apiToken}")
+            .header("Authorization", "Bearer ${config.apiToken.trim()}")
             .header("Accept", "application/json")
             .put(payload.toRequestBody(jsonMedia))
             .build()
@@ -150,7 +194,8 @@ class CaisseApiClient(
                         CatalogUpsertResult.Success(saved)
                     }
                     401, 403 -> CatalogUpsertResult.Failure(
-                        "Auth API refusée (${response.code})",
+                        "Auth refusée (${response.code}) — token incorrect " +
+                            "(longueur ${config.apiToken.trim().length}, attendu 64).",
                         retryable = false
                     )
                     400 -> CatalogUpsertResult.Failure(
@@ -177,7 +222,7 @@ class CaisseApiClient(
         val payload = product.toJsonObject().toString()
         val request = Request.Builder()
             .url("${config.baseUrl.trimEnd('/')}/v1/catalog/products")
-            .header("Authorization", "Bearer ${config.apiToken}")
+            .header("Authorization", "Bearer ${config.apiToken.trim()}")
             .header("Accept", "application/json")
             .post(payload.toRequestBody(jsonMedia))
             .build()
@@ -192,7 +237,8 @@ class CaisseApiClient(
                         CatalogUpsertResult.Success(saved)
                     }
                     401, 403 -> CatalogUpsertResult.Failure(
-                        "Auth API refusée (${response.code})",
+                        "Auth refusée (${response.code}) — token incorrect " +
+                            "(longueur ${config.apiToken.trim().length}, attendu 64).",
                         retryable = false
                     )
                     400 -> CatalogUpsertResult.Failure(

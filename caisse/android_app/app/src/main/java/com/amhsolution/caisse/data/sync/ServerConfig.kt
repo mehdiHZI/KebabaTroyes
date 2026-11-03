@@ -57,7 +57,7 @@ class ServerConfigRepository(private val context: Context) {
         context.serverConfigDataStore.edit { prefs ->
             baseUrl?.let { prefs[baseUrlKey] = it.trim().trimEnd('/') }
             apiToken?.let { plain ->
-                val trimmed = plain.trim()
+                val trimmed = normalizeApiToken(plain)
                 prefs[apiTokenKey] = if (trimmed.isEmpty()) {
                     trimmed
                 } else {
@@ -70,6 +70,16 @@ class ServerConfigRepository(private val context: Context) {
 
     private fun resolvePlainToken(stored: String?): String {
         if (stored.isNullOrBlank()) return BuildConfig.CAISSE_API_TOKEN.trim()
-        return runCatching { ApiTokenCipher.decrypt(stored) }.getOrDefault("")
+        return runCatching { ApiTokenCipher.decrypt(stored) }
+            .getOrElse { "" }
+            .let { normalizeApiToken(it) }
     }
 }
+
+/** Enlève espaces / préfixe « Bearer » collé par erreur. */
+internal fun normalizeApiToken(raw: String): String =
+    raw.trim()
+        .removePrefix("Bearer ")
+        .removePrefix("bearer ")
+        .trim()
+        .replace("\\s+".toRegex(), "")

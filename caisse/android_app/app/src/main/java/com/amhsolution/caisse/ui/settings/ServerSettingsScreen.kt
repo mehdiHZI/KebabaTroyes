@@ -188,11 +188,12 @@ fun ServerSettingsScreen(
                             busy = true
                             statusMessage = null
                             val result = withContext(Dispatchers.IO) {
-                                apiClient.health(currentConfig())
+                                apiClient.testConnection(currentConfig())
                             }
                             statusOk = result is CaisseApiResult.Success
                             statusMessage = when (result) {
-                                CaisseApiResult.Success -> "Serveur joignable (/health OK)."
+                                CaisseApiResult.Success ->
+                                    "OK : réseau + token acceptés (catalogue)."
                                 is CaisseApiResult.Failure -> "Test échoué : ${result.message}"
                             }
                             busy = false
@@ -215,8 +216,16 @@ fun ServerSettingsScreen(
                                 return@launch
                             }
                             onSave(cfg.baseUrl, cfg.apiToken, cfg.registerId)
-                            statusOk = true
-                            statusMessage = "Enregistré. La sync doit passer hors « Sync off »."
+                            val verify = withContext(Dispatchers.IO) {
+                                apiClient.testConnection(cfg)
+                            }
+                            statusOk = verify is CaisseApiResult.Success
+                            statusMessage = when (verify) {
+                                CaisseApiResult.Success ->
+                                    "Enregistré et authentifié (token ${cfg.apiToken.trim().length} car.)."
+                                is CaisseApiResult.Failure ->
+                                    "Enregistré mais auth KO : ${verify.message}"
+                            }
                             busy = false
                         }
                     }
