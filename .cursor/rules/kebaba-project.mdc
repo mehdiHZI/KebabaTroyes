@@ -11,7 +11,7 @@ Restaurant kebab à Troyes. Ce monorepo / espace de travail couvre **toute la st
 
 | Module | Rôle | Priorité d’approche |
 |--------|------|---------------------|
-| **Caisse** | Encaissement ; **auto-attestation éditeur** (4 conditions FR) ; sync VPS | Reprendre `LogicielCaisseMilanoGusto` + durcir conformité (voir `caisse-projet`) |
+| **Caisse** | Encaissement ; **auto-attestation éditeur** (4 conditions FR) ; sync VPS ; **catalogue éditable** | Reprendre `LogicielCaisseMilanoGusto` + conformité (`caisse-projet`) ; catalogue via `/v1/catalog` |
 | **Borne** | Prise de commande client en self-service | À développer / adapter |
 | **Click & collect / livraison** | Commandes en ligne (retrait magasin + livraison) | À développer / adapter |
 | **Agent IA téléphone** | Prend les commandes téléphoniques à la place d’un vendeur | Adapter l’existant |

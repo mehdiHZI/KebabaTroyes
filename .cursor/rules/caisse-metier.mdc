@@ -44,10 +44,12 @@ val total = 18.50
 
 ## Catalogue
 
-Source : règle **`carte-kebaba`** (éléments seuls + prix TTC).
-
-Catégories + articles Kebaba : libellé, prix TTC, taux TVA, options (viande, sauces, menus…) **quand fournies**.  
-**Pas** de catalogue pizza MilanoGusto en prod.
+- **Runtime** : VPS `caisse-api` `/v1/catalog` (CRUD depuis écran **Catalogue**, PIN responsable).
+- **Seed / référence PDF** : règle **`carte-kebaba`**.
+- Article : `id`, nom, catégorie, `priceCentimes`, `menuPriceCentimes?`, flags options (`hasPain`, `hasFrites`, `hasCrudites`, `hasSupplements`, `hasSauces`, `hasTakosMeats`, `supportsDrinkPlus`, `takosMeatCount`), `enabled`.
+- Listes d’options (crudités, sauces…) = `KebabaOptionCatalog` (groupes on/off par article — pas de sauce custom V1).
+- Grille caisse : uniquement `enabled`.
+- **Pas** de catalogue pizza MilanoGusto en prod.
 
 ## Clôtures & contrôle
 
@@ -70,8 +72,9 @@ Contrairement à MilanoGusto (local-only), la caisse Kebaba **doit** dialoguer a
 
 - Après chaque encaissement : publier le ticket / paiement (idempotent `ticket_id`).
 - Déclencher sorties **Stock** via API serveur — pas de stock local « vérité ».
-- Afficher l’état de sync ; outbox si offline temporaire.
-- Paramètres / catalogue : synchronisables depuis le serveur quand c’est la source retenue.
+- Afficher l’état de sync ; outbox tickets si offline temporaire.
+- Catalogue : pull serveur + édition online (échec réseau = message clair, pas d’édition fantôme V1).
+- Écran **Serveur** : URL + token (PIN) ; DNS client avec secours IP VPS.
 
 ## Hors périmètre (ne pas coder sans décision)
 

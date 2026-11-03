@@ -11,10 +11,10 @@ Ce dossier `caisse/` reprend du code MilanoGusto, mais le **cadrage légal et pr
 
 Suivre **uniquement** les rules du monorepo KebabaTroyes :
 
-- `caisse-projet` — caisse connectée VPS, reprise Milano, checklist
+- `caisse-projet` — caisse connectée VPS, reprise Milano, checklist (catalogue éditable + sync en place)
 - `caisse-conformite` — ISCA / attestation individuelle éditeur (**sans compromis**)
 - `caisse-metier` — règles métier POS
-- `carte-kebaba` — catalogue / prix
+- `carte-kebaba` — seed / référence PDF ; **runtime catalogue = VPS** `/v1/catalog`
 - `architecture-vps` / `vps-securite` / `serveur-ovh`
 
 ## Interdit (cadrage Milano obsolète)

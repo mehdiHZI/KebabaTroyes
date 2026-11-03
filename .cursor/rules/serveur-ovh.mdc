@@ -30,7 +30,9 @@ Héberge **tous** les logiciels Kebaba (caisse, borne, click & collect / livrais
 - Préférer conteneurs légers ; BDD partagée ou peu de instances Postgres.
 - IA lourde (STT/TTS/LLM) en **APIs externes** quand possible — pas de modèles locaux gourmands sans décision explicite.
 - Ne jamais committer mots de passe, clés SSH, secrets OVH / Let’s Encrypt / CrowdSec.
-- Les IP publiques / Tailscale ci-dessous sont OK dans les règles Cursor (ops) — **pas** en dur dans le code applicatif.
+- Les IP publiques / Tailscale ci-dessous sont OK dans les règles Cursor (ops).
+- Dans le code : **pas** de secrets ; l’IP publique en **secours DNS** client caisse (`CaisseApiDns` → `141.94.246.122` pour `caisse-api.kebaba.fr`) est autorisée (box resto DNS HS).
+- Apps déployées notables : Traefik, `kebaba-caisse-api` (`caisse-api.kebaba.fr` — tickets, orders, **catalogue**), click & collect, Duplicati Tailscale.
 - OS cible des scripts / Docker : **Ubuntu 24.04**.
 - Stack sécurité & déploiement conteneurs : voir règle `vps-securite`.
 

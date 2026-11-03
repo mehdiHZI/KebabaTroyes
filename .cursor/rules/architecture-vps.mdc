@@ -21,6 +21,7 @@ Tout est hébergé sur le **VPS OVH** (voir règle `serveur-ovh` : VPS-3, Gravel
 
 | Domaine | App propriétaire probable | Consommateurs typiques |
 |---------|---------------------------|------------------------|
+| **Catalogue / articles** | **`caisse-api`** (`catalog.json`) | Caisse, borne, click & collect, IA, food cost, stock |
 | Commandes | Borne / Click & collect–livraison / IA / Caisse | Cuisine, **stock**, food cost, **dashboard** |
 | Click & collect / livraison | App commande en ligne | Caisse, cuisine, stock, paiements, dashboard |
 | Encaissement | Caisse (+ paiements en ligne si applicable) | Reporting, food cost, **stock**, **dashboard** |
@@ -28,12 +29,22 @@ Tout est hébergé sur le **VPS OVH** (voir règle `serveur-ovh` : VPS-3, Gravel
 | Food cost | Food cost | Dashboard (marge / bénéfice), lecture recettes / coûts / pertes |
 | **Dashboard** | **Module dashboard** (agrégation lecture seule) | Direction / gérant (UI) |
 | RH | RH | Planning ops ; dashboard si charges de personnel |
+
+### Flux Catalogue (contrat)
+
+1. **Source de vérité** : `caisse-api` — `GET /v1/catalog`, upsert `PUT /v1/catalog/products/:id` (Bearer).
+2. Bootstrap : `catalog-seed.json` (carte Kebaba) si `catalog.json` vide.
+3. Caisse : pull périodique + écran **Catalogue** (PIN) pour CRUD ; cache local DataStore ; grille = articles `enabled`.
+4. Autres canaux (borne, click & collect…) : **consommer la même API** — ne pas dupliquer un catalogue hardcodé divergent.
+5. Référence métier PDF / règle `carte-kebaba` = seed + doc, pas la vérité runtime une fois le serveur seedé.
+
 ### Flux Caisse ↔ VPS (contrat)
 
 1. La caisse Android est un **client connecté** du VPS (grosse différence vs MilanoGusto local-only).
 2. Chaque encaissement est enregistré localement **puis** poussé au serveur (outbox si offline).
 3. Le serveur notifie / met à jour stock, réception cuisine, et alimente le dashboard.
 4. Auth + TLS ; pas d’écriture directe BDD stock/dashboard depuis l’APK.
+5. Endpoint public : `https://caisse-api.kebaba.fr` (Traefik) ; client Android a un **secours DNS → IP** `141.94.246.122` si la box resto ne résout pas.
 
 ### Flux Stock (contrat)
 
@@ -53,7 +64,8 @@ Tout est hébergé sur le **VPS OVH** (voir règle `serveur-ovh` : VPS-3, Gravel
 
 - Dupliquer une base “commandes” dans chaque app sans sync.
 - Dupliquer une base “stock” dans la caisse ou chaque canal de commande.
+- Dupliquer un **catalogue** hardcodé divergent dans borne / click & collect alors que `/v1/catalog` existe.
 - Recalculer le CA / bénéfice dans chaque app au lieu de s’appuyer sur le Dashboard (ou APIs sources documentées).
-- Hardcoder des IPs / mots de passe VPS dans le code.
+- Hardcoder des mots de passe / tokens VPS dans le code (l’IP publique en secours DNS client est OK, documentée).
 - Concevoir la caisse comme MilanoGusto (local-only sans sync serveur).
 - Coupler l’UI d’un module au schéma interne d’un autre sans couche API.

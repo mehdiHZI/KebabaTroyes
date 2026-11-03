@@ -13,11 +13,20 @@ Source de vérité **métier** des articles et options.
 
 À utiliser pour catalogue **caisse**, borne, click & collect, IA téléphone, food cost / stock.
 
+## Source de vérité runtime vs cette règle
+
+| Couche | Rôle |
+|---|---|
+| **Cette règle + PDF** | Référence métier / seed initial (bootstrap) |
+| **VPS `caisse-api`** `DATA_DIR/catalog.json` | **Source de vérité runtime** des articles (CRUD depuis la caisse) |
+| Seed code | `SampleCatalog` + `caisse-api/src/catalog-seed.json` — chargés seulement si catalogue serveur vide |
+
 - Prix = **TTC** (France). En code : **centimes** (ex. `8,00 €` → `800`).
 - Libellés : **garder les noms tels quels** (carte), sauf correction orthographe demandée.
 - Marque UI : **Kebaba** — jamais MilanoGusto / pizza.
-- Si le menu change : mettre à jour **cette règle** en premier, puis seeds / code.
-- Ne **pas** inventer de produits ou prix hors de cette carte.
+- Changement **officiel** de la carte PDF → mettre à jour **cette règle** + seeds.
+- Ajout / modif / désactivation **au quotidien** → écran **Catalogue** caisse (PIN) → API VPS — pas besoin de recompiler.
+- Ne **pas** inventer de produits ou prix hors de cette carte **dans les seeds** ; le resto peut créer des articles custom via l’UI Catalogue.
 
 ## TVA (à confirmer comptablement)
 
@@ -280,9 +289,10 @@ Upsell popup V1 : Feta · Boursin · Cheddar Maison · Frites Cheddar Bacon (`fr
 
 - `categoryId` : `klassik` | `dwich` | `kreations` | `assiettes` | `bowls` | `takos` | `menus` | `ptit-plus` | `barquettes` | `frites` | `desserts` | `boissons`
 - Groupes d’options : `pains` | `frites-etape` | `crudites` | `supplements` | `sauces`
-- Flags produit : `hasPain` | `hasFrites` | `hasCrudites` | `hasSupplements` | `hasSauces`
+- Flags produit (stockés sur l’article, lus par `KebabaOptionCatalog`) : `hasPain` | `hasFrites` | `hasCrudites` | `hasSupplements` | `hasSauces` | `hasTakosMeats` | `supportsDrinkPlus` | `takosMeatCount` | `menuPriceCentimes?` | `enabled`
 - `productId` : slug ASCII stable
 - Ne pas réutiliser les IDs / seed pizza de `LogicielCaisseMilanoGusto`
+- API catalogue : `GET /v1/catalog`, `PUT /v1/catalog/products/:id`, `POST /v1/catalog/products` (Bearer, `https://caisse-api.kebaba.fr`)
 
 ## Obsolète (ne plus seed / désactiver)
 
@@ -296,6 +306,8 @@ Ancienne carte : prix Dwich 8 €, Kréations 10,50 €, assiettes 14/12/17, Tex
 
 ## Ce que l’agent doit faire
 
-- Seed catalogue caisse / apps = **cette** carte (PDF).
-- Menu change → **cette règle** d’abord, puis le code.
-- Ne pas inventer de produits ou prix non listés ici.
+- Seed initial / bootstrap = **cette** carte (PDF) → `SampleCatalog` + `catalog-seed.json`.
+- Changement carte PDF officielle → **cette règle** d’abord, puis seeds.
+- Ne pas hardcoder un nouveau SKU uniquement dans l’APK si le runtime doit le lire du VPS.
+- Ne pas inventer de produits ou prix dans les **seeds** hors de cette carte.
+- Brancher borne / click & collect sur `GET /v1/catalog` quand on les aligne (API déjà prête).

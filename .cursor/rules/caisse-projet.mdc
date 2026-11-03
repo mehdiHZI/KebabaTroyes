@@ -99,12 +99,21 @@ Repris / adaptés de `docs/fermeture_caisse.md` upstream — **bloquants** avant
 
 ### Checklist connexion serveur (bloquants V1 produit)
 
-- [ ] Config endpoint VPS (base URL) + auth machine / utilisateur
-- [ ] API push ticket / paiement après encaissement (idempotent)
-- [ ] Outbox locale + retry + statut sync visible
-- [ ] Pull catalogue / TVA / paramètres depuis serveur (ou stratégie documentée)
+- [x] Config endpoint VPS (base URL) + auth machine / utilisateur — écran **Serveur** (PIN) ; token chiffré Keystore
+- [x] API push ticket / paiement après encaissement (idempotent)
+- [x] Outbox locale + retry + statut sync visible
+- [x] Pull / push **catalogue** depuis serveur (`/v1/catalog`) — TVA par article encore à confirmer comptablement
 - [ ] Hook sorties **Stock** + événement **réception commandes**
-- [ ] Pas de secrets commités ; TLS via Traefik
+- [x] Pas de secrets commités ; TLS via Traefik
+- [x] Secours DNS client : si Wi‑Fi resto ne résout pas `caisse-api.kebaba.fr` → IP publique VPS (TLS/SNI inchangés)
+
+### Catalogue éditable (en place)
+
+- Source de vérité : VPS `catalog.json` via `caisse-api`.
+- UI caisse : **Catalogue** (PIN responsable) — créer / modifier / désactiver ; flags options (pain, frites, crudités, suppléments, sauces, takos, drink+).
+- Grille caisse : `enabled == true` seulement.
+- Édition online obligatoire V1 (pas d’outbox catalogue offline).
+- Seed carte : règle `carte-kebaba` + `catalog-seed.json` si fichier serveur vide.
 
 ## Emplacement dans ce monorepo
 
@@ -140,7 +149,7 @@ Coupure serveur : encaissement local OK + file de sync ; alerte si retard de syn
 ## Utilisateurs
 
 - **Caissier** : commande, encaissement, impression
-- **Responsable** : historique, corrections traçables, clôtures, archives, exports
+- **Responsable** : historique, corrections traçables, clôtures, archives, exports, **Catalogue**, **Serveur** (PIN)
 - **Admin** : installation, config, sauvegardes, versions, dossier conformité
 
 ## Ordre de travail recommandé

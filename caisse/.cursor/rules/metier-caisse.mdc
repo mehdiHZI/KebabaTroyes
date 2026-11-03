@@ -14,5 +14,6 @@ Compléter / remplacer l’ancienne règle Milano par :
 4. Rapport **X** provisoire vs clôture **Z** définitive
 5. Mode **FACTICE** séparé de la production
 6. Sync VPS obligatoire (outbox) — hors tickets FACTICE
+7. Catalogue : VPS `/v1/catalog` + écran **Catalogue** (PIN) ; flags options sur le produit
 
 Ne pas réintroduire d’édition silencieuse des paiements d’un ticket validé.
