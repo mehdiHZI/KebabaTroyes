@@ -15,6 +15,7 @@ Suivre **uniquement** les rules du monorepo KebabaTroyes :
 - `caisse-conformite` — ISCA / attestation individuelle éditeur (**sans compromis**)
 - `caisse-metier` — règles métier POS
 - `carte-kebaba` — seed / référence PDF ; **runtime catalogue = VPS** `/v1/catalog`
+- `catalogue-vps` — catalogue partagé → borne / click & collect / IA (bonne catégorie auto)
 - `architecture-vps` / `vps-securite` / `serveur-ovh`
 
 ## Interdit (cadrage Milano obsolète)

@@ -304,10 +304,18 @@ Ancienne carte : prix Dwich 8 €, Kréations 10,50 €, assiettes 14/12/17, Tex
 - Différences `sur_place` / `a_emporter` / `livraison` si applicables
 - Contenu exact inclus dans chaque « menu » (frites + boisson) pour tickets cuisine
 
+## Propagation multi-apps (obligatoire)
+
+Voir règle **`catalogue-vps`**.
+
+- CRUD caisse → VPS → **tous** les canaux de commande lisent `GET /v1/catalog`.
+- Regroupement UI par `category` (`BOISSONS`, `DWICH`, …) — mapping table dans `catalogue-vps`.
+- Ex. `pepsi` / `BOISSONS` créé en caisse → visible borne & click & collect sous **Boissons**, sans redeploy du menu figé.
+
 ## Ce que l’agent doit faire
 
 - Seed initial / bootstrap = **cette** carte (PDF) → `SampleCatalog` + `catalog-seed.json`.
 - Changement carte PDF officielle → **cette règle** d’abord, puis seeds.
-- Ne pas hardcoder un nouveau SKU uniquement dans l’APK si le runtime doit le lire du VPS.
+- Ne pas hardcoder un nouveau SKU uniquement dans l’APK / la borne / le site si le runtime doit le lire du VPS.
 - Ne pas inventer de produits ou prix dans les **seeds** hors de cette carte.
-- Brancher borne / click & collect sur `GET /v1/catalog` quand on les aligne (API déjà prête).
+- **Borne / click & collect / IA** : brancher sur `GET /v1/catalog` (contrat `catalogue-vps`) — pas un catalogue parallèle.

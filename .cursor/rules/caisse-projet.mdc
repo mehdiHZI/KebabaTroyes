@@ -109,11 +109,12 @@ Repris / adaptés de `docs/fermeture_caisse.md` upstream — **bloquants** avant
 
 ### Catalogue éditable (en place)
 
-- Source de vérité : VPS `catalog.json` via `caisse-api`.
+- Source de vérité : VPS `catalog.json` via `caisse-api` — contrat multi-apps : règle **`catalogue-vps`**.
 - UI caisse : **Catalogue** (PIN responsable) — créer / modifier / désactiver ; flags options (pain, frites, crudités, suppléments, sauces, takos, drink+).
 - Grille caisse : `enabled == true` seulement.
 - Édition online obligatoire V1 (pas d’outbox catalogue offline).
 - Seed carte : règle `carte-kebaba` + `catalog-seed.json` si fichier serveur vide.
+- **Effet attendu** : un article créé ici (catégorie + prix + flags) est consommé tel quel par **borne / click & collect / IA** via `GET /v1/catalog` (bonne catégorie UI automatique).
 
 ## Emplacement dans ce monorepo
 
@@ -165,6 +166,8 @@ Coupure serveur : encaissement local OK + file de sync ; alerte si retard de syn
 
 - `caisse-conformite` — légal / attestation
 - `caisse-metier` — règles métier POS
+- `catalogue-vps` — catalogue partagé caisse → borne / online / IA
+- `carte-kebaba` — seed / référence PDF
 - `architecture-vps`, `vps-securite`, `kebaba-project`
 
 ## Ce que l’agent ne doit pas faire

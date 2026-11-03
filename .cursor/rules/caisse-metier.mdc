@@ -44,11 +44,12 @@ val total = 18.50
 
 ## Catalogue
 
-- **Runtime** : VPS `caisse-api` `/v1/catalog` (CRUD depuis écran **Catalogue**, PIN responsable).
+- **Runtime** : VPS `caisse-api` `/v1/catalog` (CRUD depuis écran **Catalogue**, PIN responsable) — voir **`catalogue-vps`**.
 - **Seed / référence PDF** : règle **`carte-kebaba`**.
 - Article : `id`, nom, catégorie, `priceCentimes`, `menuPriceCentimes?`, flags options (`hasPain`, `hasFrites`, `hasCrudites`, `hasSupplements`, `hasSauces`, `hasTakosMeats`, `supportsDrinkPlus`, `takosMeatCount`), `enabled`.
 - Listes d’options (crudités, sauces…) = `KebabaOptionCatalog` (groupes on/off par article — pas de sauce custom V1).
 - Grille caisse : uniquement `enabled`.
+- Création caisse → **propagation auto** borne / click & collect / IA (même `category`).
 - **Pas** de catalogue pizza MilanoGusto en prod.
 
 ## Clôtures & contrôle

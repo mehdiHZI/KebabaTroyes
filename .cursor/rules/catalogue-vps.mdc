@@ -1,0 +1,111 @@
+---
+description: Catalogue partagé VPS — source unique pour caisse, borne, click & collect, IA
+alwaysApply: true
+---
+
+# Catalogue partagé (VPS) — contrat multi-apps
+
+## Règle absolue
+
+**Un seul catalogue runtime** pour tout Kebaba : `caisse-api` → `https://caisse-api.kebaba.fr/v1/catalog`.
+
+Quand un article est créé / modifié / désactivé dans la **caisse** (écran Catalogue), il doit **apparaître automatiquement** dans les autres canaux (**borne**, click & collect, IA téléphone, etc.) **dans la bonne catégorie**, avec le même prix et les mêmes flags d’options — **sans** recompiler ni resaisir manuellement ailleurs.
+
+## Source de vérité
+
+| Couche | Rôle |
+|--------|------|
+| VPS `DATA_DIR/catalog.json` via `caisse-api` | **Vérité runtime** (CRUD) |
+| Règle `carte-kebaba` + PDF | Référence métier + **seed** bootstrap seulement |
+| `SampleCatalog` / `catalog-seed.json` | Chargés **uniquement** si le catalogue serveur est vide |
+
+Ne **jamais** maintenir un second catalogue hardcodé divergent dans borne / click & collect / IA.
+
+## API (Bearer = `CAISSE_API_TOKEN`)
+
+- `GET /v1/catalog` → `{ version, products[], count }`
+- `PUT /v1/catalog/products/:id` → upsert (création / édition / soft-disable)
+- `POST /v1/catalog/products` → création (id slug si besoin)
+
+Auth obligatoire sur ces routes. `/health` **sans** auth — ne pas s’en servir pour valider le token.
+
+## Schéma produit (champs à respecter partout)
+
+```text
+id, name, category, priceCentimes, menuPriceCentimes?,
+hasPain, hasFrites, hasCrudites, hasSupplements, hasSauces,
+hasTakosMeats, supportsDrinkPlus, takosMeatCount,
+enabled, updatedAtEpochMillis
+```
+
+### Catégories (`category` API = enum Android)
+
+| `category` API | UI / onglet attendu | `categoryId` règle carte |
+|----------------|---------------------|---------------------------|
+| `KLASSIK` | Klassik | `klassik` |
+| `DWICH` | 'Dwich | `dwich` |
+| `KREATIONS` | Kréations | `kreations` |
+| `ASSIETTES` | Assiettes | `assiettes` |
+| `BOWLS` | Bowls | `bowls` |
+| `TAKOS` | Takos | `takos` |
+| `MENUS` | Menus | `menus` |
+| `PTIT_PLUS` | P'tit + | `ptit-plus` |
+| `BARQUETTES` | Barquettes | `barquettes` |
+| `FRITES` | Frites | `frites` |
+| `DESSERTS` | Desserts / Côté sucré | `desserts` |
+| `BOISSONS` | Boissons | `boissons` |
+
+Exemple : article `pepsi` avec `category: "BOISSONS"` → **onglet Boissons** sur borne / click & collect, pas une catégorie inventée.
+
+### Affichage
+
+- Ne montrer que `enabled === true` (ou équivalent).
+- Prix = `priceCentimes` (TTC, centimes). Menu = `menuPriceCentimes` si non null.
+- Personnalisation : lire les **flags** du produit (pas dériver seulement de la catégorie) ; listes d’options (crudités, sauces…) = référentiel partagé type `KebabaOptionCatalog` / règle `carte-kebaba`.
+
+## Obligations par module
+
+### Caisse (fait)
+
+- CRUD Catalogue (PIN) → PUT serveur.
+- Pull périodique + cache local.
+- Grille = articles enabled.
+
+### Borne (à faire / à respecter dès le développement)
+
+- Au démarrage + refresh périodique : `GET /v1/catalog`.
+- Grouper l’UI **par `category`** (table ci-dessus).
+- Nouvel article caisse (ex. Pepsi en `BOISSONS`) → visible borne **sans** redeploy code catalogue.
+- Pas de seed pizza / menu figé qui écrase le serveur.
+
+### Click & collect / livraison / IA téléphone
+
+- Même `GET /v1/catalog` (ou cache serveur dérivé de cette API).
+- Même regroupement par catégorie + flags.
+- Commandes poussées via `/v1/orders` avec `productId` du catalogue partagé.
+
+### Food cost / stock
+
+- Lier recettes / mouvements aux `productId` du catalogue VPS.
+- Ne pas inventer des SKU parallèles.
+
+## Auth & ops
+
+- Token : env `CAISSE_API_TOKEN` (même valeur côté apps clientes).
+- URL : `https://caisse-api.kebaba.fr`.
+- Clients Android : secours DNS → IP `141.94.246.122` si box resto HS (`CaisseApiDns`).
+- « Sync OK » caisse ≠ auth OK tant que le badge n’a pas sondé le Bearer (voir `caisse-projet`).
+
+## Ce que l’agent doit faire / refuser
+
+**Faire :**
+
+- Toute UI commande (borne, online, IA) = **consommer** `/v1/catalog`.
+- Placer chaque produit dans l’onglet / section correspondant à `category`.
+- Documenter écarts si un canal filtre certaines catégories (ex. borne sans barquettes) — filtre explicite, pas un second catalogue.
+
+**Refuser :**
+
+- Hardcoder un nouveau produit seulement dans la borne / le site.
+- Resaisir manuellement Pepsi (ou tout SKU caisse) dans un autre module.
+- Mapper les catégories autrement que la table ci-dessus sans mise à jour de **cette** règle + `carte-kebaba`.

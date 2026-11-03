@@ -12,8 +12,8 @@ Restaurant kebab à Troyes. Ce monorepo / espace de travail couvre **toute la st
 | Module | Rôle | Priorité d’approche |
 |--------|------|---------------------|
 | **Caisse** | Encaissement ; **auto-attestation éditeur** (4 conditions FR) ; sync VPS ; **catalogue éditable** | Reprendre `LogicielCaisseMilanoGusto` + conformité (`caisse-projet`) ; catalogue via `/v1/catalog` |
-| **Borne** | Prise de commande client en self-service | À développer / adapter |
-| **Click & collect / livraison** | Commandes en ligne (retrait magasin + livraison) | À développer / adapter |
+| **Borne** | Prise de commande client en self-service ; **menu = catalogue VPS** (catégories auto) | Adapter ; **obligatoire** : `GET /v1/catalog` (`catalogue-vps`) |
+| **Click & collect / livraison** | Commandes en ligne ; **même catalogue VPS** | Adapter ; pas de menu hardcodé divergent |
 | **Agent IA téléphone** | Prend les commandes téléphoniques à la place d’un vendeur | Adapter l’existant |
 | **Food cost** | Calcul / suivi des coûts alimentaires | Adapter l’existant |
 | **Stock** | Inventaire temps réel ; **décrémente** via caisse + commandes ; **ajustements manuels** | À créer / brancher (pas de repo dédié) |
@@ -52,12 +52,14 @@ Principes :
 - **Adapter** à Kebaba Troyes (marque, process, menu, flux) au lieu de cloner un autre resto tel quel.
 - Tout doit pouvoir **échanger des données** via le VPS (commandes multi-canaux, stock, caisse, RH, food cost, dashboard).
 - Les canaux de commande (borne, téléphone IA, click & collect / livraison, caisse) convergent vers le **même flux commandes** (cuisine / réception).
+- **Catalogue unique VPS** : article ajouté en caisse → visible borne / online / IA dans la **bonne catégorie** (`catalogue-vps`).
 - Préférer des APIs / contrats clairs entre modules plutôt que du couplage fort.
 - Français pour l’UI métier et la doc projet ; code et noms techniques en anglais sauf convention déjà établie dans un repo repris.
 
 ## Ce que l’agent doit faire
 
 - Quand on touche à la caisse : respecter `caisse-projet`, `caisse-conformite`, `caisse-metier`.
+- Quand on touche borne / click & collect / menu client : respecter **`catalogue-vps`** + `carte-kebaba` (seed).
 - Avant de créer un module from scratch, **vérifier s’il existe déjà** dans les repos sources listés (règle `repos-existants`).
 - Quand on conçoit un flux cross-apps : respecter la règle `architecture-vps`.
 - Quand on touche au stock : respecter la section « Module Stock » ci-dessus et le domaine Stock dans `architecture-vps`.

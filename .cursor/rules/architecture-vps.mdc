@@ -32,10 +32,12 @@ Tout est hébergé sur le **VPS OVH** (voir règle `serveur-ovh` : VPS-3, Gravel
 
 ### Flux Catalogue (contrat)
 
+Détail complet : règle **`catalogue-vps`** (toujours appliquer).
+
 1. **Source de vérité** : `caisse-api` — `GET /v1/catalog`, upsert `PUT /v1/catalog/products/:id` (Bearer).
 2. Bootstrap : `catalog-seed.json` (carte Kebaba) si `catalog.json` vide.
 3. Caisse : pull périodique + écran **Catalogue** (PIN) pour CRUD ; cache local DataStore ; grille = articles `enabled`.
-4. Autres canaux (borne, click & collect…) : **consommer la même API** — ne pas dupliquer un catalogue hardcodé divergent.
+4. **Borne / click & collect / IA** : pull le **même** catalogue ; un article créé en caisse (ex. Pepsi → `BOISSONS`) apparaît **automatiquement** dans la **bonne catégorie** UI — zéro double saisie.
 5. Référence métier PDF / règle `carte-kebaba` = seed + doc, pas la vérité runtime une fois le serveur seedé.
 
 ### Flux Caisse ↔ VPS (contrat)
