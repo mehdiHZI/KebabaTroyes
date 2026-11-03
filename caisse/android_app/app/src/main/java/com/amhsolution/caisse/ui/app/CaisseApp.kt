@@ -120,7 +120,8 @@ fun CaisseApp() {
     var selectedHistoryId by remember { mutableStateOf<String?>(null) }
     var localCashClosures by remember { mutableStateOf<List<CashClosure>>(emptyList()) }
     var closureErrorMessage by remember { mutableStateOf<String?>(null) }
-    var showClosurePasswordDialog by remember { mutableStateOf(false) }
+    var showResponsiblePinDialog by remember { mutableStateOf(false) }
+    var pendingPinDestination by remember { mutableStateOf<HomeDestination?>(null) }
     var printMessage by remember { mutableStateOf<String?>(null) }
     var printChoiceRequest by remember { mutableStateOf<PrintChoiceRequest?>(null) }
     var printerSettings by remember {
@@ -203,15 +204,19 @@ fun CaisseApp() {
         cashClosureRepository.ensureArchiveFiles(displayedCashClosures)
     }
 
-    if (showClosurePasswordDialog) {
+    if (showResponsiblePinDialog) {
         ClosurePasswordDialog(
-            onDismiss = { showClosurePasswordDialog = false },
+            onDismiss = {
+                showResponsiblePinDialog = false
+                pendingPinDestination = null
+            },
             onValidate = { pin ->
                 container.responsibleAuthRepository.verifyOrBootstrap(pin)
             },
             onValidated = {
-                showClosurePasswordDialog = false
-                currentDestination = HomeDestination.ClosureArchive
+                showResponsiblePinDialog = false
+                currentDestination = pendingPinDestination
+                pendingPinDestination = null
             }
         )
     }
@@ -611,7 +616,11 @@ fun CaisseApp() {
                 },
                 onActionSelected = { destination ->
                     when (destination) {
-                        HomeDestination.ClosureArchive -> showClosurePasswordDialog = true
+                        HomeDestination.ClosureArchive,
+                        HomeDestination.ServerSettings -> {
+                            pendingPinDestination = destination
+                            showResponsiblePinDialog = true
+                        }
                         else -> currentDestination = destination
                     }
                 }

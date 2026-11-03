@@ -123,6 +123,9 @@ class AppContainer(context: Context) {
 
     init {
         scope.launch {
+            runCatching { serverConfigRepository.migratePlaintextTokenIfNeeded() }
+        }
+        scope.launch {
             while (true) {
                 try {
                     ticketSyncRepository.flush()

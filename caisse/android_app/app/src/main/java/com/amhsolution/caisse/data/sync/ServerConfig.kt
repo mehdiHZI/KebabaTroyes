@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.amhsolution.caisse.BuildConfig
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 private val Context.serverConfigDataStore by preferencesDataStore(name = "caisse_server_config")
@@ -29,12 +30,24 @@ class ServerConfigRepository(private val context: Context) {
             ServerConfig(
                 baseUrl = prefs[baseUrlKey]?.takeIf { it.isNotBlank() }
                     ?: BuildConfig.CAISSE_API_BASE_URL.trim(),
-                apiToken = prefs[apiTokenKey]?.takeIf { it.isNotBlank() }
-                    ?: BuildConfig.CAISSE_API_TOKEN.trim(),
+                apiToken = resolvePlainToken(prefs[apiTokenKey]),
                 registerId = prefs[registerIdKey]?.takeIf { it.isNotBlank() }
                     ?: BuildConfig.CAISSE_REGISTER_ID.trim().ifBlank { "caisse-1" }
             )
         }
+
+    /**
+     * Migre un ancien token en clair vers AES-GCM Keystore (idempotent).
+     * À appeler une fois au démarrage de l'app.
+     */
+    suspend fun migratePlaintextTokenIfNeeded() {
+        val prefs = context.serverConfigDataStore.data.first()
+        val stored = prefs[apiTokenKey] ?: return
+        if (stored.isBlank() || ApiTokenCipher.isEncrypted(stored)) return
+        context.serverConfigDataStore.edit { editPrefs ->
+            editPrefs[apiTokenKey] = ApiTokenCipher.encrypt(stored)
+        }
+    }
 
     suspend fun update(
         baseUrl: String? = null,
@@ -43,8 +56,20 @@ class ServerConfigRepository(private val context: Context) {
     ) {
         context.serverConfigDataStore.edit { prefs ->
             baseUrl?.let { prefs[baseUrlKey] = it.trim().trimEnd('/') }
-            apiToken?.let { prefs[apiTokenKey] = it.trim() }
+            apiToken?.let { plain ->
+                val trimmed = plain.trim()
+                prefs[apiTokenKey] = if (trimmed.isEmpty()) {
+                    trimmed
+                } else {
+                    ApiTokenCipher.encrypt(trimmed)
+                }
+            }
             registerId?.let { prefs[registerIdKey] = it.trim() }
         }
+    }
+
+    private fun resolvePlainToken(stored: String?): String {
+        if (stored.isNullOrBlank()) return BuildConfig.CAISSE_API_TOKEN.trim()
+        return runCatching { ApiTokenCipher.decrypt(stored) }.getOrDefault("")
     }
 }
