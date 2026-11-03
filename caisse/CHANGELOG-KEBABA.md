@@ -24,6 +24,7 @@ Base : [`mehdiHZI/LogicielCaisseMilanoGusto`](https://github.com/mehdiHZI/Logici
 - Android : outbox Room + OkHttp + retry 30s + badge sync accueil
 - Config : `local.properties` (`caisse.api.baseUrl`, `caisse.api.token`) — voir `android_app/local.properties.example`
 - Déploiement : DNS `caisse-api.kebaba.fr` + `docker compose` sur `proxy-net`
+- Catalogue éditable : `GET/PUT /v1/catalog` + écran **Catalogue** (PIN) — flags options, sync VPS
 
 ## Multi-canal Uber / Deliveroo (ajouté)
 
@@ -38,5 +39,5 @@ Base : [`mehdiHZI/LogicielCaisseMilanoGusto`](https://github.com/mehdiHZI/Logici
 - applicationId / package `com.kebaba…` (encore `com.amhsolution.caisse`)
 - Matériel imprimante / TPE Kebaba
 - Menu étudiant 11h–14h (contrainte horaire)
-- UI réglages serveur dans l’app (aujourd’hui BuildConfig / DataStore)
 - Hooks stock / cuisine / dashboard depuis l’API tickets
+- Brancher click & collect / borne sur le même `/v1/catalog`

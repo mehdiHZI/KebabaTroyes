@@ -1,7 +1,6 @@
 package com.amhsolution.caisse.domain.catalog
 
 import com.amhsolution.caisse.domain.model.Product
-import com.amhsolution.caisse.domain.model.ProductCategory
 
 data class KebabaOption(
     val id: String,
@@ -109,90 +108,29 @@ object KebabaOptionCatalog {
         KebabaOption("biggy", "Biggy")
     )
 
-    private val menuPrices: Map<String, Int> = mapOf(
-        "kebaba-klassik" to 1000,
-        "kofte" to 1250,
-        "poulet" to 1250,
-        "vege" to 1250,
-        "ricain" to 1250,
-        "sucuk" to 1250,
-        "adana" to 1350,
-        "krousty" to 1400,
-        "avocado-fromage-frais" to 1400,
-        "cheezy-jalapanos" to 1400,
-        "boursin-lardons" to 1400,
-        "monster" to 1400,
-        "chevre-miel" to 1400,
-        "takos-1-viande" to 1100,
-        "takos-2-viandes" to 1300,
-        "takos-3-viandes" to 1500
-    )
+    fun supportsCustomization(product: Product): Boolean = product.isCustomizable
 
-    private val customizableCategories = setOf(
-        ProductCategory.KLASSIK,
-        ProductCategory.DWICH,
-        ProductCategory.KREATIONS,
-        ProductCategory.BOWLS,
-        ProductCategory.ASSIETTES,
-        ProductCategory.TAKOS,
-        ProductCategory.MENUS
-    )
+    fun hasPain(product: Product): Boolean = product.hasPain
 
-    fun supportsCustomization(product: Product): Boolean =
-        product.category in customizableCategories
+    fun hasFritesEtape(product: Product): Boolean = product.hasFrites
 
-    fun hasPain(product: Product): Boolean =
-        product.category in setOf(
-            ProductCategory.KLASSIK,
-            ProductCategory.DWICH,
-            ProductCategory.KREATIONS
-        )
+    fun hasCrudites(product: Product): Boolean = product.hasCrudites
 
-    fun hasFritesEtape(product: Product): Boolean =
-        product.category in setOf(
-            ProductCategory.KLASSIK,
-            ProductCategory.DWICH,
-            ProductCategory.KREATIONS,
-            ProductCategory.TAKOS,
-            ProductCategory.MENUS
-        )
+    fun hasSauces(product: Product): Boolean = product.hasSauces
 
-    fun hasCrudites(product: Product): Boolean =
-        product.category in setOf(
-            ProductCategory.KLASSIK,
-            ProductCategory.DWICH,
-            ProductCategory.KREATIONS,
-            ProductCategory.BOWLS,
-            ProductCategory.ASSIETTES,
-            ProductCategory.TAKOS,
-            ProductCategory.MENUS
-        )
+    fun hasSupplements(product: Product): Boolean = product.hasSupplements
 
-    fun hasSauces(product: Product): Boolean = hasCrudites(product)
-
-    fun hasSupplements(product: Product): Boolean =
-        product.category != ProductCategory.MENUS && hasCrudites(product)
-
-    fun hasTakosMeats(product: Product): Boolean =
-        product.category == ProductCategory.TAKOS
+    fun hasTakosMeats(product: Product): Boolean = product.hasTakosMeats
 
     /** Nombre de viandes à choisir selon le SKU Takos. */
     fun takosRequiredMeatCount(product: Product): Int =
-        when (product.id) {
-            "takos-1-viande" -> 1
-            "takos-2-viandes" -> 2
-            "takos-3-viandes" -> 3
-            else -> 0
-        }
+        product.takosMeatCount.coerceAtLeast(0)
 
-    fun supportsMenuToggle(product: Product): Boolean =
-        product.id in menuPrices
+    fun supportsMenuToggle(product: Product): Boolean = product.supportsMenuToggle
 
-    fun menuPriceCentimes(product: Product): Int? = menuPrices[product.id]
+    fun menuPriceCentimes(product: Product): Int? = product.menuPriceCentimes
 
-    fun supportsDrinkPlus(product: Product): Boolean =
-        product.category == ProductCategory.BOWLS ||
-            product.category == ProductCategory.ASSIETTES
+    fun supportsDrinkPlus(product: Product): Boolean = product.supportsDrinkPlus
 
     fun sauceExtraCentimes(sauceCount: Int): Int {
         val extra = (sauceCount - MAX_INCLUDED_SAUCES).coerceAtLeast(0)

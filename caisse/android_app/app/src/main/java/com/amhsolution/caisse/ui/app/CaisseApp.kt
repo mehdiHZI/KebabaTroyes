@@ -65,7 +65,7 @@ import com.amhsolution.caisse.ui.orders.PendingOrdersScreen
 import com.amhsolution.caisse.ui.payment.PaymentScreen
 import com.amhsolution.caisse.data.sync.ServerConfig
 import com.amhsolution.caisse.ui.printers.PrinterSettingsScreen
-import com.amhsolution.caisse.ui.prices.PriceManagementScreen
+import com.amhsolution.caisse.ui.catalog.CatalogManagementScreen
 import com.amhsolution.caisse.ui.register.RegisterScreen
 import com.amhsolution.caisse.ui.settings.ServerSettingsScreen
 import kotlinx.coroutines.delay
@@ -103,6 +103,7 @@ fun CaisseApp() {
         cashClosureRepository.observeClosures()
     }.collectAsStateWithLifecycle(initialValue = emptyList<CashClosure>())
     val catalogProducts by container.catalogProducts.collectAsStateWithLifecycle()
+    val allCatalogProducts by container.allCatalogProducts.collectAsStateWithLifecycle()
     val pizzaSupplementPrices by container.pizzaSupplementPrices.collectAsStateWithLifecycle()
     val pizzaSizeOffsets by container.pizzaSizeOffsets.collectAsStateWithLifecycle()
     val productSupplementPrices by container.productSupplementPrices.collectAsStateWithLifecycle()
@@ -617,7 +618,8 @@ fun CaisseApp() {
                 onActionSelected = { destination ->
                     when (destination) {
                         HomeDestination.ClosureArchive,
-                        HomeDestination.ServerSettings -> {
+                        HomeDestination.ServerSettings,
+                        HomeDestination.PriceManagement -> {
                             pendingPinDestination = destination
                             showResponsiblePinDialog = true
                         }
@@ -772,31 +774,10 @@ fun CaisseApp() {
             }
         )
 
-        HomeDestination.PriceManagement -> PriceManagementScreen(
-            products = catalogProducts,
-            pizzaSupplementPrices = pizzaSupplementPrices,
-            productSupplementPrices = productSupplementPrices,
-            pizzaSizeOffsets = pizzaSizeOffsets,
-            onUpdatePrice = { productId, priceCentimes ->
-                scope.launch {
-                    catalogRepository.updatePrice(productId, priceCentimes)
-                }
-            },
-            onUpdatePizzaSupplementPrice = { ingredientId, priceCentimes ->
-                scope.launch {
-                    catalogRepository.updatePizzaSupplementPrice(ingredientId, priceCentimes)
-                }
-            },
-            onUpdateProductSupplementPrice = { priceKey, priceCentimes ->
-                scope.launch {
-                    catalogRepository.updateProductSupplementPrice(priceKey, priceCentimes)
-                }
-            },
-            onUpdatePizzaSizeOffset = { sizeKey, offsetCentimes ->
-                scope.launch {
-                    catalogRepository.updatePizzaSizeOffset(sizeKey, offsetCentimes)
-                }
-            },
+        HomeDestination.PriceManagement -> CatalogManagementScreen(
+            products = allCatalogProducts,
+            onSave = { product -> catalogRepository.upsertProduct(product) },
+            onRefresh = { catalogRepository.pullFromServer() },
             onBack = { currentDestination = null }
         )
 

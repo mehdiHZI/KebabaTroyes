@@ -59,9 +59,9 @@ class AppContainer(context: Context) {
         archiveRoot = File(appContext.filesDir, "archives")
     )
     val pendingOrderRepository = PendingOrderRepository(File(appContext.filesDir, "pending_orders.json"))
-    val catalogRepository = CatalogRepository(appContext)
     val printerSettingsRepository = PrinterSettingsRepository(appContext)
     val serverConfigRepository = ServerConfigRepository(appContext)
+    val catalogRepository = CatalogRepository(appContext, serverConfigRepository)
     val ticketSyncRepository = TicketSyncRepository(database, serverConfigRepository)
     val remoteOrdersRepository = RemoteOrdersRepository(serverConfigRepository)
     val customerTicketPrinter = ReceiptPrinter(appContext) {
@@ -98,6 +98,11 @@ class AppContainer(context: Context) {
             .stateIn(scope, SharingStarted.Eagerly, PerpetualTotals())
 
     val catalogProducts: StateFlow<List<Product>> =
+        catalogRepository.enabledProducts
+            .stateIn(scope, SharingStarted.Eagerly, SampleCatalog.products.filter { it.enabled })
+
+    /** Tous les articles (y compris désactivés) pour l'admin catalogue. */
+    val allCatalogProducts: StateFlow<List<Product>> =
         catalogRepository.products
             .stateIn(scope, SharingStarted.Eagerly, SampleCatalog.products)
 
@@ -124,6 +129,13 @@ class AppContainer(context: Context) {
     init {
         scope.launch {
             runCatching { serverConfigRepository.migratePlaintextTokenIfNeeded() }
+        }
+        scope.launch {
+            runCatching { catalogRepository.pullFromServer() }
+            while (true) {
+                kotlinx.coroutines.delay(60_000)
+                runCatching { catalogRepository.pullFromServer() }
+            }
         }
         scope.launch {
             while (true) {

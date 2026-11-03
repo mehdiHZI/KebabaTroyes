@@ -119,7 +119,7 @@ private fun WireframeHomeLayout(
             NavButton("Statistiques", Modifier.weight(1f)) {
                 onActionSelected(HomeDestination.Statistics)
             }
-            NavButton("Prix", Modifier.weight(1f)) {
+            NavButton("Catalogue", Modifier.weight(1f)) {
                 onActionSelected(HomeDestination.PriceManagement)
             }
             NavButton("Clôture", Modifier.weight(1f)) {
@@ -195,7 +195,7 @@ private fun CompactHomeLayout(
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            NavButton("Prix", Modifier.weight(1f)) {
+            NavButton("Catalogue", Modifier.weight(1f)) {
                 onActionSelected(HomeDestination.PriceManagement)
             }
             NavButton("Clôture", Modifier.weight(1f)) {

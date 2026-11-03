@@ -1,13 +1,32 @@
 import http from "node:http";
 import { mkdir, readFile, writeFile, rename } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { timingSafeEqual, randomUUID } from "node:crypto";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 8080);
 const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), "data");
 const TICKETS_FILE = path.join(DATA_DIR, "tickets.json");
 const ORDERS_FILE = path.join(DATA_DIR, "orders.json");
+const CATALOG_FILE = path.join(DATA_DIR, "catalog.json");
+const CATALOG_SEED_FILE = path.join(__dirname, "catalog-seed.json");
 const API_TOKEN = process.env.CAISSE_API_TOKEN || "";
+
+const PRODUCT_CATEGORIES = new Set([
+  "KLASSIK",
+  "DWICH",
+  "KREATIONS",
+  "ASSIETTES",
+  "BOWLS",
+  "TAKOS",
+  "MENUS",
+  "PTIT_PLUS",
+  "BARQUETTES",
+  "FRITES",
+  "DESSERTS",
+  "BOISSONS",
+]);
 
 /** Canaux supportés (agrégateur → VPS → caisse). */
 const CHANNELS = new Set([
@@ -35,9 +54,89 @@ async function ensureFile(file, fallback = "{}") {
   }
 }
 
+async function loadCatalogSeed() {
+  const raw = await readFile(CATALOG_SEED_FILE, "utf8");
+  return JSON.parse(raw);
+}
+
+async function ensureCatalogStore() {
+  await mkdir(DATA_DIR, { recursive: true });
+  try {
+    const raw = await readFile(CATALOG_FILE, "utf8");
+    const parsed = JSON.parse(raw || "{}");
+    const count = parsed?.products ? Object.keys(parsed.products).length : 0;
+    if (count > 0) return;
+  } catch {
+    // fichier absent
+  }
+  const seed = await loadCatalogSeed();
+  await saveJson(CATALOG_FILE, seed);
+}
+
 async function ensureStore() {
   await ensureFile(TICKETS_FILE);
   await ensureFile(ORDERS_FILE);
+  await ensureCatalogStore();
+}
+
+function slugifyProductId(name) {
+  return String(name || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64);
+}
+
+function validateProduct(body, { requireId = false } = {}) {
+  if (!body || typeof body !== "object") return "JSON objet requis";
+  if (requireId && (!body.id || typeof body.id !== "string")) return "id requis";
+  if (!body.name || typeof body.name !== "string" || !body.name.trim()) {
+    return "name requis";
+  }
+  if (!body.category || !PRODUCT_CATEGORIES.has(body.category)) {
+    return `category invalide (attendu: ${[...PRODUCT_CATEGORIES].join(", ")})`;
+  }
+  if (typeof body.priceCentimes !== "number" || body.priceCentimes < 0) {
+    return "priceCentimes invalide";
+  }
+  if (
+    body.menuPriceCentimes != null &&
+    (typeof body.menuPriceCentimes !== "number" || body.menuPriceCentimes < 0)
+  ) {
+    return "menuPriceCentimes invalide";
+  }
+  return null;
+}
+
+function normalizeProduct(body, existingId) {
+  const id =
+    (typeof body.id === "string" && body.id.trim()) ||
+    existingId ||
+    slugifyProductId(body.name) ||
+    `produit-${randomUUID().slice(0, 8)}`;
+  return {
+    id,
+    name: String(body.name).trim(),
+    category: body.category,
+    priceCentimes: Math.round(body.priceCentimes),
+    menuPriceCentimes:
+      body.menuPriceCentimes == null ? null : Math.round(body.menuPriceCentimes),
+    hasPain: Boolean(body.hasPain),
+    hasFrites: Boolean(body.hasFrites),
+    hasCrudites: Boolean(body.hasCrudites),
+    hasSupplements: Boolean(body.hasSupplements),
+    hasSauces: Boolean(body.hasSauces),
+    hasTakosMeats: Boolean(body.hasTakosMeats),
+    supportsDrinkPlus: Boolean(body.supportsDrinkPlus),
+    takosMeatCount:
+      typeof body.takosMeatCount === "number"
+        ? Math.max(0, Math.round(body.takosMeatCount))
+        : 0,
+    enabled: body.enabled !== false,
+    updatedAtEpochMillis: Date.now(),
+  };
 }
 
 async function loadJson(file) {
@@ -301,6 +400,57 @@ const server = http.createServer(async (req, res) => {
       orders[id] = order;
       await saveJson(ORDERS_FILE, orders);
       return send(res, 200, { status: "updated", order });
+    }
+
+    // —— Catalogue produits ——
+    if (req.method === "GET" && url.pathname === "/v1/catalog") {
+      const catalog = await loadJson(CATALOG_FILE);
+      const products = Object.values(catalog.products || {}).sort((a, b) => {
+        const byCat = String(a.category).localeCompare(String(b.category));
+        if (byCat !== 0) return byCat;
+        return String(a.name).localeCompare(String(b.name), "fr");
+      });
+      return send(res, 200, {
+        version: catalog.version || 1,
+        products,
+        count: products.length,
+      });
+    }
+
+    if (req.method === "POST" && url.pathname === "/v1/catalog/products") {
+      const body = await readJson(req);
+      const err = validateProduct(body);
+      if (err) return send(res, 400, { error: err });
+      const catalog = await loadJson(CATALOG_FILE);
+      if (!catalog.products) catalog.products = {};
+      let product = normalizeProduct(body);
+      if (catalog.products[product.id]) {
+        product = normalizeProduct(body, `${product.id}-${randomUUID().slice(0, 4)}`);
+      }
+      catalog.products[product.id] = product;
+      catalog.version = (catalog.version || 1) + 1;
+      await saveJson(CATALOG_FILE, catalog);
+      return send(res, 201, { status: "created", product, version: catalog.version });
+    }
+
+    if (
+      req.method === "PUT" &&
+      url.pathname.startsWith("/v1/catalog/products/")
+    ) {
+      const id = decodeURIComponent(
+        url.pathname.slice("/v1/catalog/products/".length),
+      );
+      if (!id || id.includes("/")) return send(res, 404, { error: "Route inconnue" });
+      const body = await readJson(req);
+      const err = validateProduct({ ...body, id }, { requireId: false });
+      if (err) return send(res, 400, { error: err });
+      const catalog = await loadJson(CATALOG_FILE);
+      if (!catalog.products) catalog.products = {};
+      const product = normalizeProduct({ ...body, id }, id);
+      catalog.products[id] = product;
+      catalog.version = (catalog.version || 1) + 1;
+      await saveJson(CATALOG_FILE, catalog);
+      return send(res, 200, { status: "upserted", product, version: catalog.version });
     }
 
     // Seed démo (tests) — génère une commande Uber factice
