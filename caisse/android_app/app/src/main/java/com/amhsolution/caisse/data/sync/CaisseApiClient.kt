@@ -29,6 +29,7 @@ sealed class CatalogUpsertResult {
 
 class CaisseApiClient(
     private val httpClient: OkHttpClient = OkHttpClient.Builder()
+        .dns(CaisseApiDns)
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
@@ -67,10 +68,7 @@ class CaisseApiClient(
                 }
             }
         } catch (e: Exception) {
-            CaisseApiResult.Failure(
-                e.message?.take(120) ?: "Erreur réseau",
-                retryable = true
-            )
+            CaisseApiResult.Failure(e.toCaisseNetworkMessage(), retryable = true)
         }
     }
 
@@ -88,7 +86,7 @@ class CaisseApiClient(
                 else CaisseApiResult.Failure("HTTP ${response.code}", retryable = true)
             }
         } catch (e: Exception) {
-            CaisseApiResult.Failure(e.message?.take(120) ?: "Hors ligne", retryable = true)
+            CaisseApiResult.Failure(e.toCaisseNetworkMessage(), retryable = true)
         }
     }
 
@@ -126,10 +124,7 @@ class CaisseApiClient(
                 }
             }
         } catch (e: Exception) {
-            CatalogFetchResult.Failure(
-                e.message?.take(120) ?: "Erreur réseau",
-                retryable = true
-            )
+            CatalogFetchResult.Failure(e.toCaisseNetworkMessage(), retryable = true)
         }
     }
 
@@ -171,10 +166,7 @@ class CaisseApiClient(
                 }
             }
         } catch (e: Exception) {
-            CatalogUpsertResult.Failure(
-                e.message?.take(120) ?: "Erreur réseau",
-                retryable = true
-            )
+            CatalogUpsertResult.Failure(e.toCaisseNetworkMessage(), retryable = true)
         }
     }
 
@@ -216,10 +208,7 @@ class CaisseApiClient(
                 }
             }
         } catch (e: Exception) {
-            CatalogUpsertResult.Failure(
-                e.message?.take(120) ?: "Erreur réseau",
-                retryable = true
-            )
+            CatalogUpsertResult.Failure(e.toCaisseNetworkMessage(), retryable = true)
         }
     }
 }

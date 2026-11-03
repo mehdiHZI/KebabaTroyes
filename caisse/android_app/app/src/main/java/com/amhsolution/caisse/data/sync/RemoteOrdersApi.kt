@@ -57,6 +57,7 @@ data class RemoteChannelOrder(
 
 class RemoteOrdersApi(
     private val httpClient: OkHttpClient = OkHttpClient.Builder()
+        .dns(CaisseApiDns)
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .build()
@@ -117,7 +118,7 @@ class RemoteOrdersApi(
                 else CaisseApiResult.Failure("HTTP ${response.code}", retryable = response.code >= 500)
             }
         } catch (e: Exception) {
-            CaisseApiResult.Failure(e.message?.take(120) ?: "Erreur réseau", retryable = true)
+            CaisseApiResult.Failure(e.toCaisseNetworkMessage(), retryable = true)
         }
     }
 
@@ -136,7 +137,7 @@ class RemoteOrdersApi(
                 else CaisseApiResult.Failure("HTTP ${response.code}", retryable = response.code >= 500)
             }
         } catch (e: Exception) {
-            CaisseApiResult.Failure(e.message?.take(120) ?: "Erreur réseau", retryable = true)
+            CaisseApiResult.Failure(e.toCaisseNetworkMessage(), retryable = true)
         }
     }
 
