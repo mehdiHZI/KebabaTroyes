@@ -47,9 +47,9 @@ fun KebabaScreenHeader(
             ) {
                 if (showLogo) {
                     Image(
-                        painter = painterResource(R.drawable.logo_kebaba_mark),
+                        painter = painterResource(R.drawable.logo_kebaba),
                         contentDescription = "Logo Kebaba",
-                        modifier = Modifier.size(width = 52.dp, height = 36.dp),
+                        modifier = Modifier.size(width = 72.dp, height = 56.dp),
                         contentScale = ContentScale.Fit
                     )
                 }
