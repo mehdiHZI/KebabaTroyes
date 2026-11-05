@@ -21,7 +21,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -30,7 +29,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -49,16 +47,20 @@ import com.amhsolution.caisse.domain.payment.clearKeypadInput
 import com.amhsolution.caisse.domain.payment.formatPaymentsSummary
 import com.amhsolution.caisse.domain.payment.remainingCentimes
 import com.amhsolution.caisse.domain.payment.totalPaidCentimes
+import com.amhsolution.caisse.ui.components.KebabaPanel
+import com.amhsolution.caisse.ui.components.KebabaPrimaryButton
+import com.amhsolution.caisse.ui.components.KebabaScreenHeader
+import com.amhsolution.caisse.ui.components.KebabaSecondaryButton
+import com.amhsolution.caisse.ui.components.KebabaSelectableChip
 import com.amhsolution.caisse.ui.theme.AMHCaisseTheme
-import com.amhsolution.caisse.ui.theme.CaisseBlue
-import com.amhsolution.caisse.ui.theme.CaisseBlueDark
 import com.amhsolution.caisse.ui.theme.CaisseMuted
-import com.amhsolution.caisse.ui.theme.WireframeBorder
-import com.amhsolution.caisse.ui.theme.WireframeGreenBackground
-import com.amhsolution.caisse.ui.theme.WireframeGreenBorder
-import com.amhsolution.caisse.ui.theme.WireframeGreenText
-import com.amhsolution.caisse.ui.theme.WireframeNavBackground
-import com.amhsolution.caisse.ui.theme.WireframeYellowBackground
+import com.amhsolution.caisse.ui.theme.KebabaBordeaux
+import com.amhsolution.caisse.ui.theme.KebabaCard
+import com.amhsolution.caisse.ui.theme.KebabaCreamDeep
+import com.amhsolution.caisse.ui.theme.KebabaDivider
+import com.amhsolution.caisse.ui.theme.KebabaInk
+import com.amhsolution.caisse.ui.theme.KebabaPendingBg
+import com.amhsolution.caisse.ui.theme.KebabaSoftSelected
 
 @Composable
 fun PaymentScreen(
@@ -90,7 +92,12 @@ fun PaymentScreen(
                 .fillMaxSize()
                 .padding(horizontal = 20.dp, vertical = 16.dp)
         ) {
-            PaymentHeader(onBack = onBack)
+            KebabaScreenHeader(
+                title = "Encaissement",
+                subtitle = "Paiement mixte · pavé numérique pour les montants",
+                onBack = onBack,
+                backLabel = "Retour caisse"
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -155,40 +162,12 @@ fun PaymentScreen(
                         inputCentimes = appendKeypadDigit(inputCentimes, digit)
                     },
                     onClear = { inputCentimes = clearKeypadInput() },
-                    onComma = {
-                        // La virgule est gérée visuellement via le format EUR ; on garde le bouton du wireframe.
-                    },
+                    onComma = { },
                     modifier = Modifier
                         .width(260.dp)
                         .fillMaxHeight()
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun PaymentHeader(onBack: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(
-                text = "03 - Encaissement mixte",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Articles avec prix pour paiements séparés · pavé numérique pour les montants",
-                style = MaterialTheme.typography.bodyMedium,
-                color = CaisseMuted
-            )
-        }
-
-        TextButton(onClick = onBack) {
-            Text("Retour caisse")
         }
     }
 }
@@ -202,9 +181,9 @@ private fun PaymentStatusBar(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = WireframeGreenBackground),
-        border = BorderStroke(1.dp, WireframeGreenBorder),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = KebabaSoftSelected),
+        border = BorderStroke(1.dp, KebabaBordeaux.copy(alpha = 0.2f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
@@ -234,7 +213,7 @@ private fun StatusItem(label: String, value: String, bold: Boolean = false) {
             text = value,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = if (bold) FontWeight.Bold else FontWeight.SemiBold,
-            color = WireframeGreenText
+            color = KebabaInk
         )
     }
 }
@@ -244,7 +223,7 @@ private fun ArticlesPanel(
     articles: List<PaymentArticleLine>,
     modifier: Modifier = Modifier
 ) {
-    PaymentPanel(title = "Articles", modifier = modifier) {
+    KebabaPanel(title = "Articles", modifier = modifier) {
         if (articles.isEmpty()) {
             Text(
                 text = "Aucun article",
@@ -266,6 +245,7 @@ private fun ArticlesPanel(
                             text = article.label,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
+                            color = KebabaInk,
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(end = 8.dp),
@@ -276,10 +256,10 @@ private fun ArticlesPanel(
                             text = formatEuros(article.totalCentimes),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
-                            color = WireframeGreenText
+                            color = KebabaBordeaux
                         )
                     }
-                    HorizontalDivider(color = WireframeBorder.copy(alpha = 0.25f))
+                    HorizontalDivider(color = KebabaDivider.copy(alpha = 0.55f))
                 }
             }
         }
@@ -292,7 +272,7 @@ private fun PaymentMethodPanel(
     onMethodSelected: (PaymentMethod) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    PaymentPanel(title = "Moyen de paiement", modifier = modifier) {
+    KebabaPanel(title = "Moyen de paiement", modifier = modifier) {
         Column(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.fillMaxSize()
@@ -300,34 +280,13 @@ private fun PaymentMethodPanel(
             PaymentMethod.entries
                 .filterNot { it == PaymentMethod.ANNULE || it == PaymentMethod.AVOIR }
                 .forEach { method ->
-                    val selected = method == selectedMethod
-                    Card(
+                    KebabaSelectableChip(
+                        label = method.label,
+                        selected = method == selectedMethod,
                         onClick = { onMethodSelected(method) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (selected) WireframeYellowBackground else Color.White
-                        ),
-                        border = BorderStroke(
-                            width = if (selected) 2.dp else 1.dp,
-                            color = if (selected) WireframeBorder else WireframeBorder.copy(alpha = 0.5f)
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = method.label,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
+                        modifier = Modifier.fillMaxWidth(),
+                        height = 56.dp
+                    )
                 }
         }
     }
@@ -345,7 +304,7 @@ private fun AmountPanel(
     onValidate: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    PaymentPanel(title = "Montant encaissé", modifier = modifier) {
+    KebabaPanel(title = "Montant encaissé", modifier = modifier) {
         Column(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -355,8 +314,8 @@ private fun AmountPanel(
                     .fillMaxWidth()
                     .height(80.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = BorderStroke(1.dp, WireframeBorder),
+                colors = CardDefaults.cardColors(containerColor = KebabaCreamDeep),
+                border = BorderStroke(1.dp, KebabaDivider.copy(alpha = 0.7f)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Box(
@@ -366,7 +325,8 @@ private fun AmountPanel(
                     Text(
                         text = formatEuros(inputCentimes),
                         style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = KebabaInk
                     )
                 }
             }
@@ -387,14 +347,15 @@ private fun AmountPanel(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = WireframeYellowBackground),
-                    border = BorderStroke(1.dp, WireframeBorder),
+                    colors = CardDefaults.cardColors(containerColor = KebabaPendingBg),
+                    border = BorderStroke(1.dp, KebabaDivider.copy(alpha = 0.5f)),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Text(
                         text = "Rendu monnaie : ${formatEuros(changeCentimes)}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
+                        color = KebabaInk,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -409,23 +370,19 @@ private fun AmountPanel(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                PaymentActionButton(
+                KebabaSecondaryButton(
                     label = "Ajouter paiement",
-                    containerColor = WireframeGreenBackground,
-                    contentColor = WireframeGreenText,
-                    borderColor = WireframeGreenBorder,
                     enabled = canAddPayment,
                     onClick = onAddPayment,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    height = 52.dp
                 )
-                PaymentActionButton(
+                KebabaPrimaryButton(
                     label = "Valider ticket",
-                    containerColor = CaisseBlue,
-                    contentColor = Color.White,
-                    borderColor = CaisseBlueDark,
                     enabled = canValidate,
                     onClick = onValidate,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    height = 52.dp
                 )
             }
         }
@@ -440,7 +397,7 @@ private fun KeypadPanel(
     onComma: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    PaymentPanel(title = "Pavé numérique", modifier = modifier) {
+    KebabaPanel(title = "Pavé numérique", modifier = modifier) {
         Column(modifier = Modifier.fillMaxSize()) {
             val keys = listOf(
                 listOf("1", "2", "3"),
@@ -477,8 +434,8 @@ private fun KeypadPanel(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp),
-                colors = CardDefaults.cardColors(containerColor = WireframeGreenBackground),
-                border = BorderStroke(1.dp, WireframeGreenBorder),
+                colors = CardDefaults.cardColors(containerColor = KebabaSoftSelected),
+                border = BorderStroke(1.dp, KebabaBordeaux.copy(alpha = 0.2f)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Text(
@@ -486,7 +443,7 @@ private fun KeypadPanel(
                     modifier = Modifier.padding(12.dp),
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Medium,
-                    color = WireframeGreenText,
+                    color = KebabaInk,
                     lineHeight = 18.sp
                 )
             }
@@ -504,8 +461,8 @@ private fun KeypadButton(
         onClick = onClick,
         modifier = modifier.height(64.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = WireframeNavBackground),
-        border = BorderStroke(1.dp, WireframeBorder),
+        colors = CardDefaults.cardColors(containerColor = KebabaCard),
+        border = BorderStroke(1.dp, KebabaDivider.copy(alpha = 0.75f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Box(
@@ -515,73 +472,8 @@ private fun KeypadButton(
             Text(
                 text = label,
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-}
-
-@Composable
-private fun PaymentPanel(
-    title: String,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
-) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, WireframeBorder),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(14.dp)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-            content()
-        }
-    }
-}
-
-@Composable
-private fun PaymentActionButton(
-    label: String,
-    containerColor: Color,
-    contentColor: Color,
-    borderColor: Color,
-    enabled: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = modifier.height(52.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = containerColor,
-            disabledContainerColor = containerColor.copy(alpha = 0.45f)
-        ),
-        border = BorderStroke(1.dp, borderColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = contentColor,
-                textAlign = TextAlign.Center
+                color = KebabaInk
             )
         }
     }

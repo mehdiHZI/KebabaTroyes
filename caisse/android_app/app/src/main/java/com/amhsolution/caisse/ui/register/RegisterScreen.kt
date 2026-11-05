@@ -44,7 +44,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -72,18 +71,23 @@ import com.amhsolution.caisse.domain.model.ProductCustomization
 import com.amhsolution.caisse.domain.model.SpecialOfferCustomization
 import com.amhsolution.caisse.domain.model.StudentMenuCustomization
 import com.amhsolution.caisse.domain.payment.toPaymentArticleLines
+import com.amhsolution.caisse.ui.components.KebabaDangerButton
+import com.amhsolution.caisse.ui.components.KebabaPanel
+import com.amhsolution.caisse.ui.components.KebabaPendingButton
+import com.amhsolution.caisse.ui.components.KebabaPrimaryButton
+import com.amhsolution.caisse.ui.components.KebabaScreenHeader
+import com.amhsolution.caisse.ui.components.KebabaSecondaryButton
+import com.amhsolution.caisse.ui.components.KebabaSelectableChip
 import com.amhsolution.caisse.ui.payment.PaymentScreen
 import com.amhsolution.caisse.ui.theme.AMHCaisseTheme
 import com.amhsolution.caisse.ui.theme.CaisseMuted
-import com.amhsolution.caisse.ui.theme.WireframeBorder
-import com.amhsolution.caisse.ui.theme.WireframeGreenBackground
-import com.amhsolution.caisse.ui.theme.WireframeGreenBorder
-import com.amhsolution.caisse.ui.theme.WireframeGreenText
-import com.amhsolution.caisse.ui.theme.WireframeNavBackground
-import com.amhsolution.caisse.ui.theme.WireframeRedBackground
-import com.amhsolution.caisse.ui.theme.WireframeRedBorder
-import com.amhsolution.caisse.ui.theme.WireframeRedText
-import com.amhsolution.caisse.ui.theme.WireframeYellowBackground
+import com.amhsolution.caisse.ui.theme.CaisseRed
+import com.amhsolution.caisse.ui.theme.KebabaBordeaux
+import com.amhsolution.caisse.ui.theme.KebabaCard
+import com.amhsolution.caisse.ui.theme.KebabaCreamDeep
+import com.amhsolution.caisse.ui.theme.KebabaDivider
+import com.amhsolution.caisse.ui.theme.KebabaInk
+import com.amhsolution.caisse.ui.theme.KebabaSoftSelected
 
 private val QuantityControlWidth = 116.dp
 private val QuantityButtonSize = 36.dp
@@ -327,28 +331,12 @@ fun RegisterScreen(
 
 @Composable
 private fun RegisterHeader(onBack: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(
-                text = "02 - Caisse / commande",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Choisir le type de commande puis l'action adaptée",
-                style = MaterialTheme.typography.bodyMedium,
-                color = CaisseMuted
-            )
-        }
-
-        TextButton(onClick = onBack) {
-            Text("Retour accueil")
-        }
-    }
+    KebabaScreenHeader(
+        title = "Caisse",
+        subtitle = "Type de commande, carte, puis encaissement",
+        onBack = onBack,
+        backLabel = "Retour accueil"
+    )
 }
 
 @Composable
@@ -594,35 +582,13 @@ private fun OrderTypeButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    KebabaSelectableChip(
+        label = orderType.label,
+        selected = selected,
         onClick = onClick,
-        modifier = modifier.height(OrderTypeButtonHeight),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (selected) WireframeGreenBackground else Color.White
-        ),
-        border = BorderStroke(
-            width = if (selected) 2.dp else 1.dp,
-            color = if (selected) WireframeGreenBorder else WireframeBorder
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = orderType.label,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                color = if (selected) WireframeGreenText else MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-        }
-    }
+        modifier = modifier,
+        height = OrderTypeButtonHeight
+    )
 }
 
 @Composable
@@ -631,7 +597,7 @@ private fun CategoryPanel(
     onCategorySelected: (ProductCategory) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    PanelContainer(
+    KebabaPanel(
         title = "Catégories",
         modifier = modifier
     ) {
@@ -662,35 +628,14 @@ private fun CategoryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    KebabaSelectableChip(
+        label = label,
+        selected = selected,
         onClick = onClick,
-        modifier = modifier.height(CategoryButtonHeight),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (selected) WireframeGreenBackground else WireframeNavBackground
-        ),
-        border = BorderStroke(
-            width = if (selected) 2.dp else 1.dp,
-            color = if (selected) WireframeGreenBorder else WireframeBorder
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                color = if (selected) WireframeGreenText else MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-        }
-    }
+        modifier = modifier,
+        height = CategoryButtonHeight,
+        softUnselected = true
+    )
 }
 
 @Composable
@@ -702,7 +647,7 @@ private fun ProductPanel(
     onVariantGroupSelected: (VariantProductGroup) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    PanelContainer(
+    KebabaPanel(
         title = "Produits de la carte",
         modifier = modifier
     ) {
@@ -743,9 +688,9 @@ private fun VariantGroupCard(
         modifier = Modifier
             .fillMaxWidth()
             .height(ProductCardHeight),
-        shape = RoundedCornerShape(9.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, WireframeBorder),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = KebabaCard),
+        border = BorderStroke(1.dp, KebabaDivider.copy(alpha = 0.75f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
@@ -760,7 +705,8 @@ private fun VariantGroupCard(
                 fontWeight = FontWeight.SemiBold,
                 lineHeight = 15.sp,
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                color = KebabaInk
             )
             Text(
                 text = if (starting > 0) "dès ${formatEuros(starting)}" else "Choisir",
@@ -784,9 +730,9 @@ private fun ProductCard(
         modifier = Modifier
             .fillMaxWidth()
             .height(ProductCardHeight),
-        shape = RoundedCornerShape(9.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, WireframeBorder),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = KebabaCard),
+        border = BorderStroke(1.dp, KebabaDivider.copy(alpha = 0.75f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
@@ -801,7 +747,8 @@ private fun ProductCard(
                 fontWeight = FontWeight.SemiBold,
                 lineHeight = 15.sp,
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                color = KebabaInk
             )
             Text(
                 text = if (hasConfiguredPrice) {
@@ -811,7 +758,7 @@ private fun ProductCard(
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
-                color = if (hasConfiguredPrice) WireframeGreenText else CaisseMuted
+                color = if (hasConfiguredPrice) KebabaBordeaux else CaisseMuted
             )
         }
     }
@@ -843,7 +790,7 @@ private fun CartPanel(
         mutableStateOf(orderType == OrderType.LIVRAISON && !deliveryReady)
     }
 
-    PanelContainer(
+    KebabaPanel(
         title = "Panier",
         headerExtra = {
             TicketBadge(orderType = orderType)
@@ -907,13 +854,14 @@ private fun CartPanel(
 
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = 12.dp),
-                    color = WireframeBorder.copy(alpha = 0.25f)
+                    color = KebabaDivider.copy(alpha = 0.55f)
                 )
 
                 Text(
                     text = "Total : ${formatEuros(totalCentimes)}",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
+                    color = KebabaInk,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.End
                 )
@@ -924,49 +872,41 @@ private fun CartPanel(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    ActionButton(
-                        label = "Encaisser maintenant",
-                        containerColor = WireframeGreenBackground,
-                        contentColor = WireframeGreenText,
-                        borderColor = WireframeGreenBorder,
+                    KebabaPrimaryButton(
+                        label = "Encaisser",
                         enabled = cartLines.isNotEmpty() && deliveryReady,
                         onClick = onCheckoutNow,
-                        modifier = Modifier.weight(1.2f)
+                        modifier = Modifier.weight(1.2f),
+                        height = 56.dp
                     )
-                    ActionButton(
-                        label = "Ouvrir tiroir",
-                        containerColor = WireframeNavBackground,
-                        contentColor = MaterialTheme.colorScheme.onBackground,
-                        borderColor = WireframeBorder,
+                    KebabaSecondaryButton(
+                        label = "Tiroir",
                         enabled = true,
                         onClick = onOpenCashDrawer,
-                        modifier = Modifier.weight(0.9f)
+                        modifier = Modifier.weight(0.9f),
+                        height = 56.dp
                     )
-                    ActionButton(
+                    KebabaPendingButton(
                         label = when (orderType) {
-                            OrderType.SUR_PLACE -> "Envoyer en attente"
+                            OrderType.SUR_PLACE -> "Attente"
                             OrderType.LIVRAISON -> "Attente livraison"
-                            OrderType.A_EMPORTER -> "Envoyer en attente"
+                            OrderType.A_EMPORTER -> "Attente"
                         },
-                        containerColor = WireframeYellowBackground,
-                        contentColor = MaterialTheme.colorScheme.onBackground,
-                        borderColor = WireframeBorder,
                         enabled = cartLines.isNotEmpty() && deliveryReady,
                         onClick = onQueueOrder,
-                        modifier = Modifier.weight(1.2f)
+                        modifier = Modifier.weight(1.2f),
+                        height = 56.dp
                     )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                ActionButton(
+                KebabaDangerButton(
                     label = "Annuler panier",
-                    containerColor = WireframeRedBackground,
-                    contentColor = WireframeRedText,
-                    borderColor = WireframeRedBorder,
                     enabled = cartLines.isNotEmpty(),
                     onClick = onClearCart,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    height = 48.dp
                 )
             }
         }
@@ -1012,7 +952,7 @@ private fun DeliveryInfoPanel(
                     text = "OK",
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
-                    color = WireframeGreenText
+                    color = KebabaBordeaux
                 )
             }
         }
@@ -1024,7 +964,7 @@ private fun DeliveryInfoPanel(
                 "Nom, adresse et téléphone requis"
             },
             style = MaterialTheme.typography.labelMedium,
-            color = if (isComplete) WireframeGreenText else WireframeRedText
+            color = if (isComplete) KebabaBordeaux else CaisseRed
         )
 
         OutlinedTextField(
@@ -1104,10 +1044,10 @@ private fun DeliveryInfoSummary(
             .fillMaxWidth()
             .height(48.dp),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = WireframeNavBackground),
+        colors = CardDefaults.cardColors(containerColor = KebabaCreamDeep),
         border = BorderStroke(
             width = 1.dp,
-            color = if (isComplete) WireframeGreenBorder else WireframeRedBorder
+            color = if (isComplete) KebabaBordeaux else CaisseRed.copy(alpha = 0.45f)
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -1121,12 +1061,13 @@ private fun DeliveryInfoSummary(
             Text(
                 text = "Infos livraison",
                 style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = KebabaInk
             )
             Text(
                 text = if (isComplete) "Complètes · Modifier" else "À compléter",
                 style = MaterialTheme.typography.labelMedium,
-                color = if (isComplete) WireframeGreenText else WireframeRedText
+                color = if (isComplete) KebabaBordeaux else CaisseRed
             )
         }
     }
@@ -1138,46 +1079,28 @@ private fun DriverButton(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    Card(
+    KebabaSelectableChip(
+        label = number.toString(),
+        selected = selected,
         onClick = onClick,
-        modifier = Modifier.height(34.dp),
-        shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (selected) WireframeGreenBackground else WireframeNavBackground
-        ),
-        border = BorderStroke(
-            width = if (selected) 2.dp else 1.dp,
-            color = if (selected) WireframeGreenBorder else WireframeBorder
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = number.toString(),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = if (selected) WireframeGreenText else MaterialTheme.colorScheme.onBackground
-            )
-        }
-    }
+        height = 34.dp,
+        softUnselected = true
+    )
 }
 
 @Composable
 private fun TicketBadge(orderType: OrderType) {
     Surface(
         shape = RoundedCornerShape(999.dp),
-        color = WireframeGreenBackground,
-        border = BorderStroke(1.dp, WireframeGreenBorder)
+        color = KebabaSoftSelected,
+        border = BorderStroke(1.dp, KebabaBordeaux.copy(alpha = 0.35f))
     ) {
         Text(
             text = "Ticket : ${orderType.ticketLabel}",
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold,
-            color = WireframeGreenText
+            color = KebabaBordeaux
         )
     }
 }
@@ -1312,8 +1235,8 @@ private fun QuantityButton(
             .width(QuantityButtonSize)
             .height(QuantityButtonSize),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = WireframeNavBackground),
-        border = BorderStroke(1.dp, WireframeBorder),
+        colors = CardDefaults.cardColors(containerColor = KebabaCreamDeep),
+        border = BorderStroke(1.dp, KebabaDivider.copy(alpha = 0.7f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Box(
@@ -1325,89 +1248,10 @@ private fun QuantityButton(
                 fontSize = 20.sp,
                 lineHeight = 20.sp,
                 fontWeight = FontWeight.Bold,
+                color = KebabaInk,
                 textAlign = TextAlign.Center,
                 maxLines = 1
             )
-        }
-    }
-}
-
-@Composable
-private fun ActionButton(
-    label: String,
-    containerColor: Color,
-    contentColor: Color,
-    borderColor: Color,
-    enabled: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = modifier.height(56.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = containerColor,
-            disabledContainerColor = containerColor.copy(alpha = 0.5f)
-        ),
-        border = BorderStroke(1.dp, borderColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 8.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = contentColor,
-                textAlign = TextAlign.Center,
-                lineHeight = 18.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
-
-@Composable
-private fun PanelContainer(
-    title: String,
-    modifier: Modifier = Modifier,
-    headerExtra: @Composable (() -> Unit)? = null,
-    content: @Composable () -> Unit
-) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, WireframeBorder),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(14.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                headerExtra?.invoke()
-            }
-            content()
         }
     }
 }

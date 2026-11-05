@@ -40,6 +40,7 @@ import com.amhsolution.caisse.domain.orders.groupedByDriver
 import com.amhsolution.caisse.domain.model.DeliveryInfo
 import com.amhsolution.caisse.domain.model.OrderTicket
 import com.amhsolution.caisse.domain.model.OrderType
+import com.amhsolution.caisse.ui.components.KebabaScreenHeader
 import com.amhsolution.caisse.ui.theme.AMHCaisseTheme
 import com.amhsolution.caisse.ui.theme.CaisseBlue
 import com.amhsolution.caisse.ui.theme.CaisseBlueDark
@@ -169,31 +170,13 @@ private fun OrderListScaffold(
                 .fillMaxSize()
                 .padding(horizontal = 24.dp, vertical = 18.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = CaisseMuted
-                    )
-                }
+            KebabaScreenHeader(
+                title = title,
+                subtitle = subtitle,
+                onBack = onBack,
+                backLabel = "Retour accueil"
+            )
 
-                TextButton(onClick = onBack) {
-                    Text("Retour accueil")
-                }
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-            HorizontalDivider(color = WireframeBorder.copy(alpha = 0.25f))
             Spacer(modifier = Modifier.height(14.dp))
 
             content()

@@ -18,6 +18,14 @@ val KebabaInk = Color(0xFF2A1218)
 val KebabaInkMuted = Color(0xFF5C4A4E)
 val KebabaCard = Color(0xFFFFFFFF)
 
+/** Tokens UI pro (sélection / surfaces / accents) */
+val KebabaSelectedBg = KebabaBordeaux
+val KebabaSelectedFg = Color.White
+val KebabaSoftSelected = Color(0xFFF0E4E7)
+val KebabaDivider = Color(0xFFD4C4C8)
+val KebabaPendingBg = Color(0xFFF8E6D9)
+val KebabaPendingFg = Color(0xFF8A3A12)
+
 /** Alias UI historique (écrans repris Milano) → palette Kebaba */
 val CaisseBlue = KebabaBordeaux
 val CaisseBlueDark = KebabaBordeauxDeep

@@ -1,6 +1,5 @@
 package com.amhsolution.caisse.ui.home
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,38 +14,30 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.amhsolution.caisse.R
 import com.amhsolution.caisse.data.sync.SyncStatusSnapshot
-import com.amhsolution.caisse.data.sync.SyncUiState
+import com.amhsolution.caisse.ui.components.KebabaAccentTile
+import com.amhsolution.caisse.ui.components.KebabaHeroCta
+import com.amhsolution.caisse.ui.components.KebabaNavTile
+import com.amhsolution.caisse.ui.components.KebabaSimulationBadge
+import com.amhsolution.caisse.ui.components.KebabaSyncBadge
 import com.amhsolution.caisse.ui.theme.AMHCaisseTheme
-import com.amhsolution.caisse.ui.theme.CaisseRed
-import com.amhsolution.caisse.ui.theme.KebabaBordeaux
+import com.amhsolution.caisse.ui.theme.KebabaCreamDeep
+import com.amhsolution.caisse.ui.theme.KebabaInk
 import com.amhsolution.caisse.ui.theme.KebabaInkMuted
-import com.amhsolution.caisse.ui.theme.WireframeBorder
-import com.amhsolution.caisse.ui.theme.WireframeGreenBackground
-import com.amhsolution.caisse.ui.theme.WireframeGreenBorder
-import com.amhsolution.caisse.ui.theme.WireframeGreenText
-import com.amhsolution.caisse.ui.theme.WireframeNavBackground
-import com.amhsolution.caisse.ui.theme.WireframeSubtitle
-import com.amhsolution.caisse.ui.theme.WireframeYellowBackground
+import com.amhsolution.caisse.ui.theme.KebabaPendingBg
+import com.amhsolution.caisse.ui.theme.KebabaSoftSelected
 
 enum class HomeDestination {
     Register,
@@ -84,7 +75,7 @@ fun HomeScreen(
                     onActionSelected = onActionSelected
                 )
             } else {
-                WireframeHomeLayout(
+                TabletHomeLayout(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 40.dp, vertical = 28.dp),
@@ -99,7 +90,7 @@ fun HomeScreen(
 }
 
 @Composable
-private fun WireframeHomeLayout(
+private fun TabletHomeLayout(
     modifier: Modifier = Modifier,
     syncStatus: SyncStatusSnapshot?,
     simulationEnabled: Boolean = false,
@@ -107,7 +98,7 @@ private fun WireframeHomeLayout(
     onActionSelected: (HomeDestination) -> Unit
 ) {
     Column(modifier = modifier) {
-        HomeWireframeHeader(
+        HomeBrandHeader(
             syncStatus = syncStatus,
             simulationEnabled = simulationEnabled,
             onToggleSimulation = onToggleSimulation
@@ -117,24 +108,24 @@ private fun WireframeHomeLayout(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            NavButton("Historique", Modifier.weight(1f)) {
+            KebabaNavTile("Historique", Modifier.weight(1f)) {
                 onActionSelected(HomeDestination.History)
             }
-            NavButton("Statistiques", Modifier.weight(1f)) {
+            KebabaNavTile("Statistiques", Modifier.weight(1f)) {
                 onActionSelected(HomeDestination.Statistics)
             }
-            NavButton("Catalogue", Modifier.weight(1f)) {
+            KebabaNavTile("Catalogue", Modifier.weight(1f)) {
                 onActionSelected(HomeDestination.PriceManagement)
             }
-            NavButton("Clôture", Modifier.weight(1f)) {
+            KebabaNavTile("Clôture", Modifier.weight(1f)) {
                 onActionSelected(HomeDestination.ClosureArchive)
             }
-            NavButton("Imprimantes", Modifier.weight(1f)) {
+            KebabaNavTile("Imprimantes", Modifier.weight(1f)) {
                 onActionSelected(HomeDestination.PrinterSettings)
             }
-            NavButton("Serveur", Modifier.weight(1f)) {
+            KebabaNavTile("Serveur", Modifier.weight(1f)) {
                 onActionSelected(HomeDestination.ServerSettings)
             }
         }
@@ -148,29 +139,35 @@ private fun WireframeHomeLayout(
             horizontalArrangement = Arrangement.spacedBy(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            PendingButton(
+            KebabaAccentTile(
                 label = "À encaisser\nsur place /\nà emporter",
+                onClick = { onActionSelected(HomeDestination.OnSiteToCollect) },
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight(),
-                onClick = { onActionSelected(HomeDestination.OnSiteToCollect) }
+                containerColor = KebabaSoftSelected,
+                contentColor = KebabaInk
             )
-            CaisseButton(
+            KebabaHeroCta(
+                title = "CAISSE",
+                subtitle = "Commander / encaisser",
+                onClick = { onActionSelected(HomeDestination.Register) },
                 modifier = Modifier
                     .weight(2f)
-                    .fillMaxHeight(),
-                onClick = { onActionSelected(HomeDestination.Register) }
+                    .fillMaxHeight()
             )
-            PendingButton(
+            KebabaAccentTile(
                 label = "À encaisser\nlivraison",
+                onClick = { onActionSelected(HomeDestination.DeliveryToCollect) },
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight(),
-                onClick = { onActionSelected(HomeDestination.DeliveryToCollect) }
+                containerColor = KebabaPendingBg,
+                contentColor = KebabaInk
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
-        AmhAttribution()
+        HomeFooter()
     }
 }
 
@@ -186,66 +183,74 @@ private fun CompactHomeLayout(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        HomeWireframeHeader(
+        HomeBrandHeader(
             syncStatus = syncStatus,
             simulationEnabled = simulationEnabled,
             onToggleSimulation = onToggleSimulation
         )
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            NavButton("Historique", Modifier.weight(1f)) {
+            KebabaNavTile("Historique", Modifier.weight(1f)) {
                 onActionSelected(HomeDestination.History)
             }
-            NavButton("Stats", Modifier.weight(1f)) {
+            KebabaNavTile("Stats", Modifier.weight(1f)) {
                 onActionSelected(HomeDestination.Statistics)
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            NavButton("Catalogue", Modifier.weight(1f)) {
+            KebabaNavTile("Catalogue", Modifier.weight(1f)) {
                 onActionSelected(HomeDestination.PriceManagement)
             }
-            NavButton("Clôture", Modifier.weight(1f)) {
+            KebabaNavTile("Clôture", Modifier.weight(1f)) {
                 onActionSelected(HomeDestination.ClosureArchive)
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            NavButton("Imprimantes", Modifier.weight(1f)) {
+            KebabaNavTile("Imprimantes", Modifier.weight(1f)) {
                 onActionSelected(HomeDestination.PrinterSettings)
             }
-            NavButton("Serveur", Modifier.weight(1f)) {
+            KebabaNavTile("Serveur", Modifier.weight(1f)) {
                 onActionSelected(HomeDestination.ServerSettings)
             }
         }
 
-        CaisseButton(
+        KebabaHeroCta(
+            title = "CAISSE",
+            subtitle = "Commander / encaisser",
+            onClick = { onActionSelected(HomeDestination.Register) },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(110.dp),
-            onClick = { onActionSelected(HomeDestination.Register) }
+                .height(110.dp)
         )
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            PendingButton(
+            KebabaAccentTile(
                 label = "À encaisser\nsur place /\nà emporter",
+                onClick = { onActionSelected(HomeDestination.OnSiteToCollect) },
                 modifier = Modifier
                     .weight(1f)
-                    .height(110.dp),
-                onClick = { onActionSelected(HomeDestination.OnSiteToCollect) }
+                    .height(110.dp)
+                    .widthIn(min = 120.dp),
+                containerColor = KebabaSoftSelected,
+                contentColor = KebabaInk
             )
-            PendingButton(
+            KebabaAccentTile(
                 label = "À encaisser\nlivraison",
+                onClick = { onActionSelected(HomeDestination.DeliveryToCollect) },
                 modifier = Modifier
                     .weight(1f)
-                    .height(110.dp),
-                onClick = { onActionSelected(HomeDestination.DeliveryToCollect) }
+                    .height(110.dp)
+                    .widthIn(min = 120.dp),
+                containerColor = KebabaPendingBg,
+                contentColor = KebabaInk
             )
         }
-        AmhAttribution()
+        HomeFooter()
     }
 }
 
 @Composable
-private fun AmhAttribution() {
+private fun HomeFooter() {
     Box(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.CenterEnd
@@ -253,13 +258,13 @@ private fun AmhAttribution() {
         Text(
             text = "Kebaba Troyes",
             style = MaterialTheme.typography.labelSmall,
-            color = WireframeSubtitle
+            color = KebabaInkMuted
         )
     }
 }
 
 @Composable
-private fun HomeWireframeHeader(
+private fun HomeBrandHeader(
     syncStatus: SyncStatusSnapshot? = null,
     simulationEnabled: Boolean = false,
     onToggleSimulation: (() -> Unit)? = null
@@ -285,7 +290,7 @@ private fun HomeWireframeHeader(
                         text = "Kebaba Caisse",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
+                        color = KebabaInk
                     )
                     Text(
                         text = "Döner & Co · Troyes",
@@ -294,175 +299,23 @@ private fun HomeWireframeHeader(
                     )
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 if (simulationEnabled || onToggleSimulation != null) {
-                    Card(
-                        onClick = { onToggleSimulation?.invoke() },
-                        shape = RoundedCornerShape(8.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (simulationEnabled) {
-                                WireframeYellowBackground
-                            } else {
-                                Color.White
-                            }
-                        ),
-                        border = BorderStroke(1.dp, WireframeBorder)
-                    ) {
-                        Text(
-                            text = if (simulationEnabled) "FACTICE" else "Prod",
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    KebabaSimulationBadge(
+                        simulationEnabled = simulationEnabled,
+                        onToggle = onToggleSimulation
+                    )
                 }
-                syncStatus?.let { SyncStatusBadge(it) }
+                syncStatus?.let { KebabaSyncBadge(it) }
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
-        HorizontalDivider(color = WireframeBorder.copy(alpha = 0.25f))
-    }
-}
-
-@Composable
-private fun SyncStatusBadge(status: SyncStatusSnapshot) {
-    val (label, bg, fg) = when (status.state) {
-        SyncUiState.OK -> Triple("Sync OK", WireframeGreenBackground, WireframeGreenText)
-        SyncUiState.PENDING -> Triple(
-            "Sync ${status.pendingCount}",
-            WireframeYellowBackground,
-            KebabaBordeaux
+        androidx.compose.material3.HorizontalDivider(
+            color = KebabaCreamDeep
         )
-        SyncUiState.ERROR -> Triple(
-            "Sync erreur",
-            Color(0xFFFFEBEE),
-            CaisseRed
-        )
-        SyncUiState.DISABLED -> Triple("Sync off", WireframeNavBackground, WireframeSubtitle)
-    }
-    Card(
-        colors = CardDefaults.cardColors(containerColor = bg),
-        border = BorderStroke(1.dp, fg.copy(alpha = 0.45f)),
-        shape = RoundedCornerShape(10.dp)
-    ) {
-        Text(
-            text = label,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
-            color = fg
-        )
-    }
-}
-
-@Composable
-private fun NavButton(
-    label: String,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    WireframeCard(
-        modifier = modifier.height(56.dp),
-        containerColor = WireframeNavBackground,
-        borderColor = WireframeBorder,
-        borderWidth = 1.dp,
-        cornerRadius = 12.dp,
-        onClick = onClick
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Composable
-private fun CaisseButton(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    WireframeCard(
-        modifier = modifier,
-        containerColor = WireframeGreenBackground,
-        borderColor = WireframeGreenBorder,
-        borderWidth = 3.dp,
-        cornerRadius = 14.dp,
-        onClick = onClick
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "CAISSE",
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Bold,
-                color = WireframeGreenText,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = "Commander / encaisser",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = WireframeGreenText,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-@Composable
-private fun PendingButton(
-    label: String,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    WireframeCard(
-        modifier = modifier.widthIn(min = 120.dp),
-        containerColor = WireframeYellowBackground,
-        borderColor = WireframeBorder,
-        borderWidth = 1.dp,
-        cornerRadius = 12.dp,
-        onClick = onClick
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.Center,
-            lineHeight = 24.sp
-        )
-    }
-}
-
-@Composable
-private fun WireframeCard(
-    modifier: Modifier = Modifier,
-    containerColor: Color,
-    borderColor: Color,
-    borderWidth: androidx.compose.ui.unit.Dp,
-    cornerRadius: androidx.compose.ui.unit.Dp,
-    onClick: () -> Unit,
-    content: @Composable () -> Unit
-) {
-    Card(
-        onClick = onClick,
-        modifier = modifier,
-        shape = RoundedCornerShape(cornerRadius),
-        colors = CardDefaults.cardColors(containerColor = containerColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = BorderStroke(borderWidth, borderColor)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            content()
-        }
     }
 }
 

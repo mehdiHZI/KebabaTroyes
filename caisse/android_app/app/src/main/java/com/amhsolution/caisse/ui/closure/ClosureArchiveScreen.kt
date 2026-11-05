@@ -40,8 +40,10 @@ import com.amhsolution.caisse.domain.closure.CashClosureType
 import com.amhsolution.caisse.domain.formatEuros
 import com.amhsolution.caisse.domain.model.OrderType
 import com.amhsolution.caisse.domain.model.PaymentMethod
+import com.amhsolution.caisse.ui.components.KebabaScreenHeader
 import com.amhsolution.caisse.ui.theme.AMHCaisseTheme
 import com.amhsolution.caisse.ui.theme.CaisseMuted
+import com.amhsolution.caisse.ui.theme.KebabaDivider
 import com.amhsolution.caisse.ui.theme.WireframeBorder
 import com.amhsolution.caisse.ui.theme.WireframeGreenText
 import java.time.Instant
@@ -114,30 +116,13 @@ fun ClosureArchiveScreen(
                 .fillMaxSize()
                 .padding(horizontal = 24.dp, vertical = 18.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        text = "Cloture",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Tickets Z journaliers, mensuels et annuels",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = CaisseMuted
-                    )
-                }
-                TextButton(onClick = onBack) {
-                    Text("Retour accueil")
-                }
-            }
+            KebabaScreenHeader(
+                title = "Clôture",
+                subtitle = "Tickets Z journaliers, mensuels et annuels",
+                onBack = onBack,
+                backLabel = "Retour accueil"
+            )
 
-            Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = WireframeBorder.copy(alpha = 0.25f))
             Spacer(modifier = Modifier.height(16.dp))
 
             if (sortedClosures.isEmpty()) {
@@ -473,7 +458,7 @@ private fun ClosureDetailCard(
                     )
                 }
             }
-            HorizontalDivider(color = WireframeBorder.copy(alpha = 0.25f))
+            HorizontalDivider(color = KebabaDivider.copy(alpha = 0.55f))
             DetailRow("Nombre de tickets", closure.ticketCount.toString())
             DetailRow("Plage tickets", closure.ticketRangeLabel)
             DetailRow("Total tickets", formatEuros(closure.totalRevenueCentimes))

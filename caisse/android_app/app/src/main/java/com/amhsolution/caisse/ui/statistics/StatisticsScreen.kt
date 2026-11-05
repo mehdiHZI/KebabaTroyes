@@ -44,6 +44,7 @@ import com.amhsolution.caisse.domain.model.PaymentMethod
 import com.amhsolution.caisse.domain.statistics.computeStatistics
 import com.amhsolution.caisse.ui.common.DateFilterSection
 import com.amhsolution.caisse.ui.orders.HistoryCalendarDialog
+import com.amhsolution.caisse.ui.components.KebabaScreenHeader
 import com.amhsolution.caisse.ui.theme.AMHCaisseTheme
 import com.amhsolution.caisse.ui.theme.CaisseMuted
 import com.amhsolution.caisse.ui.theme.WireframeBorder
@@ -140,31 +141,13 @@ fun StatisticsScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp, vertical = 14.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        text = "Statistiques",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = dateFilter.displayLabel(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = CaisseMuted
-                    )
-                }
+            KebabaScreenHeader(
+                title = "Statistiques",
+                subtitle = dateFilter.displayLabel(),
+                onBack = onBack,
+                backLabel = "Retour accueil"
+            )
 
-                TextButton(onClick = onBack) {
-                    Text("Retour accueil")
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-            HorizontalDivider(color = WireframeBorder.copy(alpha = 0.25f))
             Spacer(modifier = Modifier.height(10.dp))
 
             DateFilterSection(

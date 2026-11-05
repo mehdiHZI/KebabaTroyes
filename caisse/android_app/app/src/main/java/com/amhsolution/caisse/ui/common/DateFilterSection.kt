@@ -18,10 +18,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.amhsolution.caisse.ui.theme.CaisseBlue
-import com.amhsolution.caisse.ui.theme.CaisseBlueDark
-import com.amhsolution.caisse.ui.theme.WireframeBorder
-import com.amhsolution.caisse.ui.theme.WireframeNavBackground
+import com.amhsolution.caisse.ui.theme.KebabaBordeaux
+import com.amhsolution.caisse.ui.theme.KebabaBordeauxDeep
+import com.amhsolution.caisse.ui.theme.KebabaCreamDeep
+import com.amhsolution.caisse.ui.theme.KebabaDivider
+import com.amhsolution.caisse.ui.theme.KebabaInk
 
 @Composable
 fun DateFilterSection(
@@ -29,13 +30,13 @@ fun DateFilterSection(
     onOpenCalendar: () -> Unit,
     onResetToday: () -> Unit,
     modifier: Modifier = Modifier,
-    hint: String = "Filtre : journee ou periode"
+    hint: String = "Filtre : journée ou période"
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = WireframeNavBackground),
-        border = BorderStroke(1.dp, WireframeBorder),
+        colors = CardDefaults.cardColors(containerColor = KebabaCreamDeep),
+        border = BorderStroke(1.dp, KebabaDivider.copy(alpha = 0.7f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
@@ -49,12 +50,14 @@ fun DateFilterSection(
                 text = hint,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
+                color = KebabaInk,
                 modifier = Modifier.weight(0.9f)
             )
             Text(
                 text = dateFilterLabel,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
+                color = KebabaInk,
                 textAlign = TextAlign.End,
                 modifier = Modifier.weight(1f)
             )
@@ -63,7 +66,7 @@ fun DateFilterSection(
                 onClick = onOpenCalendar
             )
             TextButton(onClick = onResetToday) {
-                Text("Aujourd'hui")
+                Text("Aujourd'hui", color = KebabaBordeaux, fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -77,8 +80,8 @@ private fun DateFilterChipButton(
     Card(
         onClick = onClick,
         shape = RoundedCornerShape(999.dp),
-        colors = CardDefaults.cardColors(containerColor = CaisseBlue),
-        border = BorderStroke(1.dp, CaisseBlueDark)
+        colors = CardDefaults.cardColors(containerColor = KebabaBordeaux),
+        border = BorderStroke(1.dp, KebabaBordeauxDeep)
     ) {
         Text(
             text = label,

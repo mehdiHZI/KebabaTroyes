@@ -46,7 +46,9 @@ import com.amhsolution.caisse.domain.formatEurosAmount
 import com.amhsolution.caisse.domain.model.Product
 import com.amhsolution.caisse.domain.model.ProductCategory
 import com.amhsolution.caisse.domain.parseEurosInput
+import com.amhsolution.caisse.ui.components.KebabaScreenHeader
 import com.amhsolution.caisse.ui.theme.CaisseMuted
+import com.amhsolution.caisse.ui.theme.KebabaDivider
 import com.amhsolution.caisse.ui.theme.WireframeBorder
 import com.amhsolution.caisse.ui.theme.WireframeGreenText
 import kotlinx.coroutines.launch
@@ -125,24 +127,12 @@ fun CatalogManagementScreen(
                 .fillMaxSize()
                 .padding(horizontal = 24.dp, vertical = 18.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        text = "Catalogue",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Créer / modifier articles (sync VPS)",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = CaisseMuted
-                    )
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            KebabaScreenHeader(
+                title = "Catalogue",
+                subtitle = "Créer / modifier articles (sync VPS)",
+                onBack = onBack,
+                backLabel = "Retour",
+                trailing = {
                     TextButton(
                         enabled = !busy,
                         onClick = {
@@ -163,14 +153,9 @@ fun CatalogManagementScreen(
                     ) {
                         Text("Sync")
                     }
-                    TextButton(onClick = onBack) {
-                        Text("Retour")
-                    }
                 }
-            }
+            )
 
-            Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = WireframeBorder.copy(alpha = 0.25f))
             Spacer(modifier = Modifier.height(12.dp))
 
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -244,7 +229,7 @@ private fun CatalogProductRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .border(BorderStroke(1.dp, WireframeBorder.copy(alpha = 0.35f)), RoundedCornerShape(10.dp))
+            .border(BorderStroke(1.dp, KebabaDivider.copy(alpha = 0.65f)), RoundedCornerShape(10.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -355,7 +340,7 @@ private fun ProductEditorScreen(
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = WireframeBorder.copy(alpha = 0.25f))
+            HorizontalDivider(color = KebabaDivider.copy(alpha = 0.55f))
             Spacer(modifier = Modifier.height(12.dp))
 
             Column(

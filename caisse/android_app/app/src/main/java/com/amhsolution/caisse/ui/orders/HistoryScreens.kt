@@ -51,10 +51,12 @@ import com.amhsolution.caisse.domain.model.OrderType
 import com.amhsolution.caisse.domain.model.PaymentMethod
 import com.amhsolution.caisse.domain.model.PaymentRecord
 import com.amhsolution.caisse.domain.payment.paymentMethodShortLabel
+import com.amhsolution.caisse.ui.components.KebabaScreenHeader
 import com.amhsolution.caisse.ui.theme.AMHCaisseTheme
 import com.amhsolution.caisse.ui.theme.CaisseBlue
 import com.amhsolution.caisse.ui.theme.CaisseBlueDark
 import com.amhsolution.caisse.ui.theme.CaisseMuted
+import com.amhsolution.caisse.ui.theme.KebabaDivider
 import com.amhsolution.caisse.ui.theme.WireframeBorder
 import com.amhsolution.caisse.ui.theme.WireframeGreenText
 import com.amhsolution.caisse.ui.theme.WireframeNavBackground
@@ -113,31 +115,13 @@ fun HistoryScreen(
                 .fillMaxSize()
                 .padding(horizontal = 24.dp, vertical = 18.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        text = "06 - Historique",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Consultation des tickets et paiements",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = CaisseMuted
-                    )
-                }
+            KebabaScreenHeader(
+                title = "Historique",
+                subtitle = "Consultation des tickets et paiements",
+                onBack = onBack,
+                backLabel = "Retour accueil"
+            )
 
-                TextButton(onClick = onBack) {
-                    Text("Retour accueil")
-                }
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-            HorizontalDivider(color = WireframeBorder.copy(alpha = 0.25f))
             Spacer(modifier = Modifier.height(14.dp))
 
             HistoryFilterBar(
@@ -185,7 +169,7 @@ fun HistoryScreen(
                             record = record,
                             onOpenTicket = { onOpenTicket(record) }
                         )
-                        HorizontalDivider(color = WireframeBorder.copy(alpha = 0.2f))
+                        HorizontalDivider(color = KebabaDivider.copy(alpha = 0.5f))
                     }
                 }
             }

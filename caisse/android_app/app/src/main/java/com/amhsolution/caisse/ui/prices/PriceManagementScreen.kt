@@ -46,10 +46,12 @@ import com.amhsolution.caisse.domain.formatEurosAmount
 import com.amhsolution.caisse.domain.model.Product
 import com.amhsolution.caisse.domain.model.ProductCategory
 import com.amhsolution.caisse.domain.parseEurosInput
+import com.amhsolution.caisse.ui.components.KebabaScreenHeader
 import com.amhsolution.caisse.ui.theme.AMHCaisseTheme
 import com.amhsolution.caisse.ui.theme.CaisseBlue
 import com.amhsolution.caisse.ui.theme.CaisseBlueDark
 import com.amhsolution.caisse.ui.theme.CaisseMuted
+import com.amhsolution.caisse.ui.theme.KebabaDivider
 import com.amhsolution.caisse.ui.theme.WireframeBorder
 import com.amhsolution.caisse.ui.theme.WireframeGreenText
 import com.amhsolution.caisse.ui.theme.WireframeNavBackground
@@ -102,38 +104,20 @@ fun PriceManagementScreen(
                 .fillMaxSize()
                 .padding(horizontal = 24.dp, vertical = 18.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        text = "Prix",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = when {
-                            selectedPanel == PricePanel.PIZZA_SIZE_OFFSETS ->
-                                "Anciennes majorations taille (non utilisées Kebaba)"
-                            selectedPanel == PricePanel.PIZZA_SUPPLEMENTS ||
-                                selectedPanel == PricePanel.PRODUCT_SUPPLEMENTS ->
-                                "Modifier le prix unitaire des suppléments"
-                            else -> "Modifier les prix des articles"
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = CaisseMuted
-                    )
-                }
+            KebabaScreenHeader(
+                title = "Prix",
+                subtitle = when {
+                    selectedPanel == PricePanel.PIZZA_SIZE_OFFSETS ->
+                        "Anciennes majorations taille (non utilisées Kebaba)"
+                    selectedPanel == PricePanel.PIZZA_SUPPLEMENTS ||
+                        selectedPanel == PricePanel.PRODUCT_SUPPLEMENTS ->
+                        "Modifier le prix unitaire des suppléments"
+                    else -> "Modifier les prix des articles"
+                },
+                onBack = onBack,
+                backLabel = "Retour accueil"
+            )
 
-                TextButton(onClick = onBack) {
-                    Text("Retour accueil")
-                }
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-            HorizontalDivider(color = WireframeBorder.copy(alpha = 0.25f))
             Spacer(modifier = Modifier.height(14.dp))
 
             LazyRow(
@@ -235,7 +219,7 @@ fun PriceManagementScreen(
                             allowZero = true,
                             onSavePrice = onUpdatePizzaSizeOffset
                         )
-                        HorizontalDivider(color = WireframeBorder.copy(alpha = 0.2f))
+                        HorizontalDivider(color = KebabaDivider.copy(alpha = 0.5f))
                     }
                 }
 
@@ -255,7 +239,7 @@ fun PriceManagementScreen(
                                     ?: PizzaCatalog.DEFAULT_SUPPLEMENT_PRICE_CENTIMES,
                                 onSavePrice = onUpdatePizzaSupplementPrice
                             )
-                            HorizontalDivider(color = WireframeBorder.copy(alpha = 0.2f))
+                            HorizontalDivider(color = KebabaDivider.copy(alpha = 0.5f))
                         }
                     }
                     PricePanel.PRODUCT_SUPPLEMENTS -> {
@@ -274,7 +258,7 @@ fun PriceManagementScreen(
                                     ?: ProductOptionCatalog.DEFAULT_SUPPLEMENT_PRICE_CENTIMES,
                                 onSavePrice = onUpdateProductSupplementPrice
                             )
-                            HorizontalDivider(color = WireframeBorder.copy(alpha = 0.2f))
+                            HorizontalDivider(color = KebabaDivider.copy(alpha = 0.5f))
                         }
                     }
                     PricePanel.PRODUCTS -> {
@@ -287,7 +271,7 @@ fun PriceManagementScreen(
                                 product = product,
                                 onSavePrice = onUpdatePrice
                             )
-                            HorizontalDivider(color = WireframeBorder.copy(alpha = 0.2f))
+                            HorizontalDivider(color = KebabaDivider.copy(alpha = 0.5f))
                         }
                     }
                 }

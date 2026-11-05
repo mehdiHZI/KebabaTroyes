@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.amhsolution.caisse.data.sync.CaisseApiClient
 import com.amhsolution.caisse.data.sync.CaisseApiResult
 import com.amhsolution.caisse.data.sync.ServerConfig
+import com.amhsolution.caisse.ui.components.KebabaScreenHeader
 import com.amhsolution.caisse.ui.theme.CaisseMuted
 import com.amhsolution.caisse.ui.theme.WireframeBorder
 import com.amhsolution.caisse.ui.theme.WireframeGreenText
@@ -75,30 +76,13 @@ fun ServerSettingsScreen(
                 .fillMaxSize()
                 .padding(horizontal = 24.dp, vertical = 18.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        text = "Serveur / sync",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "URL API VPS + token Bearer (même valeur que sur le serveur)",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = CaisseMuted
-                    )
-                }
-                TextButton(onClick = onBack) {
-                    Text("Retour accueil")
-                }
-            }
+            KebabaScreenHeader(
+                title = "Serveur",
+                subtitle = "URL API VPS + token Bearer (même valeur que sur le serveur)",
+                onBack = onBack,
+                backLabel = "Retour accueil"
+            )
 
-            Spacer(modifier = Modifier.height(14.dp))
-            HorizontalDivider(color = WireframeBorder.copy(alpha = 0.25f))
             Spacer(modifier = Modifier.height(14.dp))
 
             Column(

@@ -40,8 +40,10 @@ import com.amhsolution.caisse.data.printing.PrinterLinkType
 import com.amhsolution.caisse.data.printing.PrinterRoutingSettings
 import com.amhsolution.caisse.data.printing.TicketOutputTarget
 import com.amhsolution.caisse.data.printing.displayName
+import com.amhsolution.caisse.ui.components.KebabaScreenHeader
 import com.amhsolution.caisse.ui.theme.CaisseBlue
 import com.amhsolution.caisse.ui.theme.CaisseMuted
+import com.amhsolution.caisse.ui.theme.KebabaDivider
 import com.amhsolution.caisse.ui.theme.WireframeBorder
 import com.amhsolution.caisse.ui.theme.WireframeNavBackground
 
@@ -71,30 +73,13 @@ fun PrinterSettingsScreen(
                 .fillMaxSize()
                 .padding(horizontal = 24.dp, vertical = 18.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        text = "Imprimantes",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Bluetooth ou Wi-Fi (TCP port 9100) pour chaque ticket",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = CaisseMuted
-                    )
-                }
-                TextButton(onClick = onBack) {
-                    Text("Retour accueil")
-                }
-            }
+            KebabaScreenHeader(
+                title = "Imprimantes",
+                subtitle = "Bluetooth ou Wi-Fi (TCP port 9100) pour chaque ticket",
+                onBack = onBack,
+                backLabel = "Retour accueil"
+            )
 
-            Spacer(modifier = Modifier.height(14.dp))
-            HorizontalDivider(color = WireframeBorder.copy(alpha = 0.25f))
             Spacer(modifier = Modifier.height(14.dp))
 
             Column(
@@ -160,7 +145,7 @@ fun PrinterSettingsScreen(
                 }
             }
 
-            HorizontalDivider(color = WireframeBorder.copy(alpha = 0.25f))
+            HorizontalDivider(color = KebabaDivider.copy(alpha = 0.55f))
             Spacer(modifier = Modifier.height(12.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
