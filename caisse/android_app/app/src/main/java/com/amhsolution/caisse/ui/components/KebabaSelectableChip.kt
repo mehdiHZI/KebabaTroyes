@@ -1,14 +1,14 @@
 package com.amhsolution.caisse.ui.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -37,24 +37,22 @@ fun KebabaSelectableChip(
     height: Dp = 44.dp,
     softUnselected: Boolean = false
 ) {
-    Card(
-        onClick = onClick,
-        modifier = modifier.height(height),
+    val container = when {
+        selected -> KebabaSelectedBg
+        softUnselected -> KebabaCreamDeep
+        else -> KebabaCard
+    }
+    Surface(
+        modifier = modifier
+            .height(height)
+            .clickable(onClick = onClick),
         shape = ChipShape,
-        colors = CardDefaults.cardColors(
-            containerColor = when {
-                selected -> KebabaSelectedBg
-                softUnselected -> KebabaCreamDeep
-                else -> KebabaCard
-            }
-        ),
+        color = container,
         border = BorderStroke(
             width = 1.dp,
             color = if (selected) KebabaBordeauxDeep else KebabaDivider.copy(alpha = 0.75f)
         ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (selected) 1.dp else 0.dp
-        )
+        shadowElevation = if (selected) 1.dp else 0.dp
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),

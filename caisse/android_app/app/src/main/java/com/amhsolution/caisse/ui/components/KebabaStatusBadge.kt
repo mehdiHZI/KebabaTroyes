@@ -1,11 +1,11 @@
 package com.amhsolution.caisse.ui.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -33,25 +33,17 @@ fun KebabaStatusBadge(
 ) {
     val shape = RoundedCornerShape(10.dp)
     val border = BorderStroke(1.dp, foreground.copy(alpha = 0.35f))
-    if (onClick != null) {
-        Card(
-            onClick = onClick,
-            modifier = modifier,
-            shape = shape,
-            colors = CardDefaults.cardColors(containerColor = background),
-            border = border
-        ) {
-            BadgeLabel(label, foreground)
-        }
-    } else {
-        Card(
-            modifier = modifier,
-            shape = shape,
-            colors = CardDefaults.cardColors(containerColor = background),
-            border = border
-        ) {
-            BadgeLabel(label, foreground)
-        }
+    Surface(
+        modifier = if (onClick != null) {
+            modifier.clickable(onClick = onClick)
+        } else {
+            modifier
+        },
+        shape = shape,
+        color = background,
+        border = border
+    ) {
+        BadgeLabel(label, foreground)
     }
 }
 
