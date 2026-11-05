@@ -33,11 +33,11 @@ import com.amhsolution.caisse.ui.components.KebabaNavTile
 import com.amhsolution.caisse.ui.components.KebabaSimulationBadge
 import com.amhsolution.caisse.ui.components.KebabaSyncBadge
 import com.amhsolution.caisse.ui.theme.AMHCaisseTheme
+import com.amhsolution.caisse.ui.theme.KebabaBordeaux
+import com.amhsolution.caisse.ui.theme.KebabaCard
 import com.amhsolution.caisse.ui.theme.KebabaCreamDeep
 import com.amhsolution.caisse.ui.theme.KebabaInk
 import com.amhsolution.caisse.ui.theme.KebabaInkMuted
-import com.amhsolution.caisse.ui.theme.KebabaPendingBg
-import com.amhsolution.caisse.ui.theme.KebabaSoftSelected
 
 enum class HomeDestination {
     Register,
@@ -145,8 +145,8 @@ private fun TabletHomeLayout(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight(),
-                containerColor = KebabaSoftSelected,
-                contentColor = KebabaInk
+                containerColor = KebabaCard,
+                contentColor = KebabaBordeaux
             )
             KebabaHeroCta(
                 title = "CAISSE",
@@ -162,8 +162,8 @@ private fun TabletHomeLayout(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight(),
-                containerColor = KebabaPendingBg,
-                contentColor = KebabaInk
+                containerColor = KebabaCard,
+                contentColor = KebabaBordeaux
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
@@ -231,8 +231,8 @@ private fun CompactHomeLayout(
                     .weight(1f)
                     .height(110.dp)
                     .widthIn(min = 120.dp),
-                containerColor = KebabaSoftSelected,
-                contentColor = KebabaInk
+                containerColor = KebabaCard,
+                contentColor = KebabaBordeaux
             )
             KebabaAccentTile(
                 label = "À encaisser\nlivraison",
@@ -241,8 +241,8 @@ private fun CompactHomeLayout(
                     .weight(1f)
                     .height(110.dp)
                     .widthIn(min = 120.dp),
-                containerColor = KebabaPendingBg,
-                contentColor = KebabaInk
+                containerColor = KebabaCard,
+                contentColor = KebabaBordeaux
             )
         }
         HomeFooter()
