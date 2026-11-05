@@ -39,10 +39,10 @@ private val ButtonShape = RoundedCornerShape(12.dp)
 @Composable
 fun KebabaPrimaryButton(
     label: String,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    height: Dp = 48.dp
+    height: Dp = 48.dp,
+    onClick: () -> Unit
 ) {
     Button(
         onClick = onClick,
@@ -68,10 +68,10 @@ fun KebabaPrimaryButton(
 @Composable
 fun KebabaSecondaryButton(
     label: String,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    height: Dp = 48.dp
+    height: Dp = 48.dp,
+    onClick: () -> Unit
 ) {
     OutlinedButton(
         onClick = onClick,
@@ -97,60 +97,60 @@ fun KebabaSecondaryButton(
 @Composable
 fun KebabaPendingButton(
     label: String,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    height: Dp = 48.dp
+    height: Dp = 48.dp,
+    onClick: () -> Unit
 ) {
     KebabaToneButton(
         label = label,
-        onClick = onClick,
         modifier = modifier,
         enabled = enabled,
         height = height,
         containerColor = KebabaPendingBg,
         contentColor = KebabaPendingFg,
-        borderColor = KebabaPendingFg.copy(alpha = 0.25f)
+        borderColor = KebabaPendingFg.copy(alpha = 0.25f),
+        onClick = onClick
     )
 }
 
 @Composable
 fun KebabaDangerButton(
     label: String,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    height: Dp = 48.dp
+    height: Dp = 48.dp,
+    onClick: () -> Unit
 ) {
     KebabaToneButton(
         label = label,
-        onClick = onClick,
         modifier = modifier,
         enabled = enabled,
         height = height,
         containerColor = CaisseRedSoft,
         contentColor = CaisseRed,
-        borderColor = CaisseRed.copy(alpha = 0.35f)
+        borderColor = CaisseRed.copy(alpha = 0.35f),
+        onClick = onClick
     )
 }
 
 @Composable
 fun KebabaNavTile(
     label: String,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    height: Dp = 52.dp
+    height: Dp = 52.dp,
+    onClick: () -> Unit
 ) {
     KebabaToneButton(
         label = label,
-        onClick = onClick,
         modifier = modifier,
         enabled = true,
         height = height,
         containerColor = KebabaCreamDeep,
         contentColor = KebabaInk,
         borderColor = KebabaDivider.copy(alpha = 0.6f),
-        textStyleBold = false
+        textStyleBold = false,
+        onClick = onClick
     )
 }
 
@@ -158,8 +158,8 @@ fun KebabaNavTile(
 fun KebabaHeroCta(
     title: String,
     subtitle: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
 ) {
     Surface(
         modifier = modifier.clickable(onClick = onClick),
@@ -199,10 +199,10 @@ fun KebabaHeroCta(
 @Composable
 fun KebabaAccentTile(
     label: String,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     containerColor: Color = KebabaPendingBg,
-    contentColor: Color = KebabaBordeauxDeep
+    contentColor: Color = KebabaBordeauxDeep,
+    onClick: () -> Unit
 ) {
     Surface(
         modifier = modifier.clickable(onClick = onClick),
@@ -231,14 +231,14 @@ fun KebabaAccentTile(
 @Composable
 private fun KebabaToneButton(
     label: String,
-    onClick: () -> Unit,
     modifier: Modifier,
     enabled: Boolean,
     height: Dp,
     containerColor: Color,
     contentColor: Color,
     borderColor: Color,
-    textStyleBold: Boolean = true
+    textStyleBold: Boolean = true,
+    onClick: () -> Unit
 ) {
     Surface(
         modifier = modifier
