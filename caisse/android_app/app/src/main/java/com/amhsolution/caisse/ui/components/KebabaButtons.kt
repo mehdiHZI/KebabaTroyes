@@ -1,17 +1,19 @@
 package com.amhsolution.caisse.ui.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -100,29 +102,16 @@ fun KebabaPendingButton(
     enabled: Boolean = true,
     height: Dp = 48.dp
 ) {
-    Card(
+    KebabaToneButton(
+        label = label,
         onClick = onClick,
+        modifier = modifier,
         enabled = enabled,
-        modifier = modifier.height(height),
-        shape = ButtonShape,
-        colors = CardDefaults.cardColors(
-            containerColor = KebabaPendingBg,
-            disabledContainerColor = KebabaPendingBg.copy(alpha = 0.45f)
-        ),
-        border = BorderStroke(1.dp, KebabaPendingFg.copy(alpha = 0.25f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Box(Modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(
-                text = label,
-                modifier = Modifier.padding(horizontal = 8.dp),
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.titleSmall,
-                color = KebabaPendingFg,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
+        height = height,
+        containerColor = KebabaPendingBg,
+        contentColor = KebabaPendingFg,
+        borderColor = KebabaPendingFg.copy(alpha = 0.25f)
+    )
 }
 
 @Composable
@@ -133,29 +122,16 @@ fun KebabaDangerButton(
     enabled: Boolean = true,
     height: Dp = 48.dp
 ) {
-    Card(
+    KebabaToneButton(
+        label = label,
         onClick = onClick,
+        modifier = modifier,
         enabled = enabled,
-        modifier = modifier.height(height),
-        shape = ButtonShape,
-        colors = CardDefaults.cardColors(
-            containerColor = CaisseRedSoft,
-            disabledContainerColor = CaisseRedSoft.copy(alpha = 0.45f)
-        ),
-        border = BorderStroke(1.dp, CaisseRed.copy(alpha = 0.35f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(
-                text = label,
-                modifier = Modifier.padding(horizontal = 8.dp),
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.titleSmall,
-                color = CaisseRed,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
+        height = height,
+        containerColor = CaisseRedSoft,
+        contentColor = CaisseRed,
+        borderColor = CaisseRed.copy(alpha = 0.35f)
+    )
 }
 
 @Composable
@@ -165,25 +141,17 @@ fun KebabaNavTile(
     modifier: Modifier = Modifier,
     height: Dp = 52.dp
 ) {
-    Card(
+    KebabaToneButton(
+        label = label,
         onClick = onClick,
-        modifier = modifier.height(height),
-        shape = ButtonShape,
-        colors = CardDefaults.cardColors(containerColor = KebabaCreamDeep),
-        border = BorderStroke(1.dp, KebabaDivider.copy(alpha = 0.6f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(
-                text = label,
-                fontWeight = FontWeight.SemiBold,
-                style = MaterialTheme.typography.titleMedium,
-                color = KebabaInk,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-        }
-    }
+        modifier = modifier,
+        enabled = true,
+        height = height,
+        containerColor = KebabaCreamDeep,
+        contentColor = KebabaInk,
+        borderColor = KebabaDivider.copy(alpha = 0.6f),
+        textStyleBold = false
+    )
 }
 
 @Composable
@@ -193,12 +161,11 @@ fun KebabaHeroCta(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        onClick = onClick,
-        modifier = modifier,
+    Surface(
+        modifier = modifier.clickable(onClick = onClick),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = KebabaBordeaux),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        color = KebabaBordeaux,
+        shadowElevation = 2.dp
     ) {
         Box(
             modifier = Modifier
@@ -206,7 +173,10 @@ fun KebabaHeroCta(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             contentAlignment = Alignment.Center
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.headlineLarge,
@@ -234,13 +204,11 @@ fun KebabaAccentTile(
     containerColor: Color = KebabaPendingBg,
     contentColor: Color = KebabaBordeauxDeep
 ) {
-    Card(
-        onClick = onClick,
-        modifier = modifier,
+    Surface(
+        modifier = modifier.clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = containerColor),
-        border = BorderStroke(1.dp, contentColor.copy(alpha = 0.18f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        color = containerColor,
+        border = BorderStroke(1.dp, contentColor.copy(alpha = 0.18f))
     ) {
         Box(
             modifier = Modifier
@@ -255,6 +223,46 @@ fun KebabaAccentTile(
                 color = contentColor,
                 textAlign = TextAlign.Center,
                 lineHeight = MaterialTheme.typography.titleMedium.lineHeight
+            )
+        }
+    }
+}
+
+@Composable
+private fun KebabaToneButton(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier,
+    enabled: Boolean,
+    height: Dp,
+    containerColor: Color,
+    contentColor: Color,
+    borderColor: Color,
+    textStyleBold: Boolean = true
+) {
+    Surface(
+        modifier = modifier
+            .height(height)
+            .clickable(enabled = enabled, onClick = onClick),
+        shape = ButtonShape,
+        color = if (enabled) containerColor else containerColor.copy(alpha = 0.45f),
+        border = BorderStroke(1.dp, borderColor)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = label,
+                modifier = Modifier.padding(horizontal = 8.dp),
+                fontWeight = if (textStyleBold) FontWeight.Bold else FontWeight.SemiBold,
+                style = if (textStyleBold) {
+                    MaterialTheme.typography.titleSmall
+                } else {
+                    MaterialTheme.typography.titleMedium
+                },
+                color = contentColor,
+                textAlign = TextAlign.Center
             )
         }
     }
