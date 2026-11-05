@@ -12,6 +12,8 @@ val KebabaCream = Color(0xFFF3EFE6)
 val KebabaCreamDeep = Color(0xFFEBE4D6)
 val KebabaBordeaux = Color(0xFF6B1220)
 val KebabaBordeauxDeep = Color(0xFF4A0C16)
+/** Rouge fez du logo mascotte Kebaba */
+val KebabaFezRed = Color(0xFFC62828)
 val KebabaInk = Color(0xFF2A1218)
 val KebabaInkMuted = Color(0xFF5C4A4E)
 val KebabaCard = Color(0xFFFFFFFF)

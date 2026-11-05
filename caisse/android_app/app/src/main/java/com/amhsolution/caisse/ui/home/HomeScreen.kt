@@ -1,6 +1,7 @@
 package com.amhsolution.caisse.ui.home
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -24,16 +26,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.amhsolution.caisse.R
 import com.amhsolution.caisse.data.sync.SyncStatusSnapshot
 import com.amhsolution.caisse.data.sync.SyncUiState
 import com.amhsolution.caisse.ui.theme.AMHCaisseTheme
 import com.amhsolution.caisse.ui.theme.CaisseRed
 import com.amhsolution.caisse.ui.theme.KebabaBordeaux
+import com.amhsolution.caisse.ui.theme.KebabaInkMuted
 import com.amhsolution.caisse.ui.theme.WireframeBorder
 import com.amhsolution.caisse.ui.theme.WireframeGreenBackground
 import com.amhsolution.caisse.ui.theme.WireframeGreenBorder
@@ -264,12 +270,30 @@ private fun HomeWireframeHeader(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Kebaba Caisse",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.logo_kebaba),
+                    contentDescription = "Logo Kebaba",
+                    modifier = Modifier.size(width = 72.dp, height = 52.dp),
+                    contentScale = ContentScale.Fit
+                )
+                Column {
+                    Text(
+                        text = "Kebaba Caisse",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Text(
+                        text = "Döner & Co · Troyes",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = KebabaInkMuted
+                    )
+                }
+            }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (simulationEnabled || onToggleSimulation != null) {
                     Card(
