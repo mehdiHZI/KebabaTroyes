@@ -85,12 +85,12 @@ Pain frais de Momo **ou** dürüm. Ancien id `speciaux` → **`kreations`**.
 
 Pain frais, boulgour maison, frites, crudités. Upsell boisson **+1,00 €**.
 
-Personnalisation caisse (défaut **Oui**) :
+Personnalisation caisse (défaut **Oui**) — ticket cuisine **listage positif** :
 
-| Étape | Choix | Si Non |
-|-------|-------|--------|
-| Boulgour | Oui / Non | `sans-boulgour` dans `removedIngredients` |
-| Frites | Oui / Non | `sans-frites-assiette` dans `removedIngredients` |
+| Étape | Oui | Non |
+|-------|-----|-----|
+| Boulgour | `incl-boulgour` sur le ticket | rien |
+| Frites | `incl-frites-assiette` sur le ticket | rien |
 
 | Article | Prix TTC | Centimes | `productId` |
 |---------|----------|----------|-------------|
@@ -120,7 +120,7 @@ Upsell boisson **+1,00 €**.
 Viandes au choix : kebab, poulet mariné, steak, nuggets, tenders, cordon bleu, falafel.  
 Menu = prix seul **+3,00 €**.
 
-Personnalisation caisse : **Sauce fromagère** Oui / Non (défaut **Oui**) → si Non : `sans-sauce-fromagere` dans `removedIngredients`. Même toggle pour le 'Dwich **Ricain** (`ricain`).
+Personnalisation caisse : **Sauce fromagère** Oui / Non (défaut **Oui**) — Oui → `incl-sauce-fromagere` sur le ticket cuisine ; Non → absent. Même toggle pour le 'Dwich **Ricain** (`ricain`).
 
 | Article | Seul | Menu | Centimes | `productId` |
 |---------|------|------|----------|-------------|
@@ -294,13 +294,15 @@ Upsell popup V1 : Feta · Boursin · Cheddar Maison · Frites Cheddar Bacon (`fr
 |--------|------|----------|------------|-------|
 | Boisson (avec bowl / assiette) | +1,00 € | 100 | `boisson-plus` | Upsell plat |
 
-### Toggles inclus (défaut Oui) — caisse
+### Toggles inclus (défaut Oui) — caisse / ticket cuisine
 
-| Produits | Question | Si Non (`removedIngredients`) |
+Listage positif uniquement : ce qui est **Oui** apparaît sur le bon cuisine ; **Non** = ligne absente (pas de « Sans … »).
+
+| Produits | Question | Si Oui (`addedSupplements`) |
 |----------|----------|-------------------------------|
-| Assiettes | Boulgour ? | `sans-boulgour` |
-| Assiettes | Frites ? | `sans-frites-assiette` |
-| Takos + Ricain (`ricain`) | Sauce fromagère ? | `sans-sauce-fromagere` |
+| Assiettes | Boulgour ? | `incl-boulgour` |
+| Assiettes | Frites ? | `incl-frites-assiette` |
+| Takos + Ricain (`ricain`) | Sauce fromagère ? | `incl-sauce-fromagere` |
 
 ## Identifiants techniques (convention)
 

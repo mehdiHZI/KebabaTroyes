@@ -306,6 +306,10 @@ private fun StringBuilder.appendCustomerLine(line: TicketPrintLine, columns: Int
 
 private fun StringBuilder.appendLineDetails(details: List<String>, columns: Int) {
     details.forEach { detail ->
+        if (detail.isBlank()) {
+            appendLine()
+            return@forEach
+        }
         val compactLine = when {
             detail.startsWith("Supp. ") -> "  + ${detail.removePrefix("Supp. ")}"
             detail.startsWith("Sans ") -> "  SANS ${detail.removePrefix("Sans ")}"

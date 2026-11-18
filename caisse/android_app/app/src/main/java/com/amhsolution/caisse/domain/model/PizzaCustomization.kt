@@ -75,7 +75,8 @@ data class ProductCustomization(
             }
             burgerReplacements.forEach { add("Sauce ${it.label}") }
             val otherSupplements = addedSupplements.filterNot {
-                it.id.startsWith("burger-replace-sauce-")
+                it.id.startsWith("burger-replace-sauce-") ||
+                    it.id.startsWith("incl-")
             }
             if (otherSupplements.isNotEmpty()) {
                 add("Supp. ${otherSupplements.joinToString { it.label }}")

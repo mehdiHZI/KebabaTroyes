@@ -10,12 +10,15 @@ import com.amhsolution.caisse.domain.model.OrderTicket
 import com.amhsolution.caisse.domain.model.OrderType
 import com.amhsolution.caisse.domain.model.PaymentMethod
 import com.amhsolution.caisse.domain.model.PaymentRecord
+import com.amhsolution.caisse.domain.model.IngredientSelection
+import com.amhsolution.caisse.domain.model.ProductCustomization
 import com.amhsolution.caisse.domain.model.StudentMenuChoiceKind
 import com.amhsolution.caisse.domain.model.StudentMenuCustomization
 import com.amhsolution.caisse.domain.model.SupplementSelection
 import com.amhsolution.caisse.domain.closure.CashClosure
 import com.amhsolution.caisse.domain.closure.CashClosureType
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -461,6 +464,123 @@ class TicketPrintPayloadTest {
         assertTrue(details.contains("Basilic"))
         assertTrue(details.contains("Pepsi"))
         assertTrue(text.contains("  - Pain focaccia"))
+    }
+
+    @Test
+    fun `ticket cuisine assiette liste seulement les inclus oui`() {
+        val withSides = OrderTicket(
+            id = "assiette-oui",
+            ticketNumber = 60,
+            orderType = OrderType.SUR_PLACE,
+            lines = listOf(
+                OrderLineSnapshot(
+                    productName = "Assiette Klassik",
+                    quantity = 1,
+                    totalCentimes = 1500,
+                    productId = "assiette-klassik",
+                    productCustomization = ProductCustomization(
+                        removedIngredients = listOf(
+                            IngredientSelection("tomates", "Tomate")
+                        ),
+                        addedSupplements = listOf(
+                            SupplementSelection("incl-boulgour", "Boulgour", 0),
+                            SupplementSelection("incl-frites-assiette", "Frites", 0)
+                        )
+                    )
+                )
+            ),
+            totalCentimes = 1500,
+            createdAtEpochMillis = 1_782_200_000_000,
+            statusLabel = "A regler"
+        )
+        val withDetails = withSides.toKitchenTicketPrintPayload().lines.single().kitchenDetails
+        assertTrue(withDetails.contains("Boulgour"))
+        assertTrue(withDetails.contains("Frites"))
+        assertTrue(withDetails.contains("Salade"))
+        assertFalse(withDetails.any { it.contains("Sans", ignoreCase = true) })
+        assertFalse(withDetails.contains("Tomate"))
+
+        val withoutSides = OrderTicket(
+            id = "assiette-non",
+            ticketNumber = 61,
+            orderType = OrderType.SUR_PLACE,
+            lines = listOf(
+                OrderLineSnapshot(
+                    productName = "Assiette Klassik",
+                    quantity = 1,
+                    totalCentimes = 1500,
+                    productId = "assiette-klassik",
+                    productCustomization = ProductCustomization(
+                        removedIngredients = listOf(
+                            IngredientSelection("tomates", "Tomate")
+                        ),
+                        addedSupplements = emptyList()
+                    )
+                )
+            ),
+            totalCentimes = 1500,
+            createdAtEpochMillis = 1_782_200_000_000,
+            statusLabel = "A regler"
+        )
+        val withoutDetails = withoutSides.toKitchenTicketPrintPayload().lines.single().kitchenDetails
+        assertFalse(withoutDetails.contains("Boulgour"))
+        assertFalse(withoutDetails.contains("Frites"))
+        assertFalse(withoutDetails.any { it.contains("Sans", ignoreCase = true) })
+    }
+
+    @Test
+    fun `ticket cuisine respecte l ordre pain sauces supp crudites options boisson`() {
+        val order = OrderTicket(
+            id = "ordre-cuisine",
+            ticketNumber = 62,
+            orderType = OrderType.A_EMPORTER,
+            lines = listOf(
+                OrderLineSnapshot(
+                    productName = "Kofte",
+                    quantity = 1,
+                    totalCentimes = 1250,
+                    productId = "kofte",
+                    productCustomization = ProductCustomization(
+                        removedIngredients = listOf(
+                            IngredientSelection("tomates", "Tomate"),
+                            IngredientSelection("carotte", "Carotte")
+                        ),
+                        addedSupplements = listOf(
+                            SupplementSelection("incl-boulgour", "Boulgour", 0),
+                            SupplementSelection("feta", "Feta", 150),
+                            SupplementSelection("blanche-maison", "Blanche Maison", 0),
+                            SupplementSelection("pain-frais", "Pain Pain (frais de Momo)", 0),
+                            SupplementSelection("frites-maison", "Frites Frites Maison", 0),
+                            SupplementSelection("option-menu", "Menu (frites + boisson)", 300)
+                        ),
+                        includedDrink = IngredientSelection("coca-cola-33", "Coca Cola 33 cl")
+                    )
+                )
+            ),
+            totalCentimes = 1250,
+            createdAtEpochMillis = 1_782_200_000_000,
+            statusLabel = "A regler"
+        )
+        val details = order.toKitchenTicketPrintPayload().lines.single().kitchenDetails
+        val text = order.toKitchenTicketPrintPayload().toPrintableText()
+
+        val painIdx = details.indexOfFirst { it.contains("Pain", ignoreCase = true) }
+        val sauceIdx = details.indexOf("Blanche Maison")
+        val suppIdx = details.indexOf("Supp. Feta")
+        val cruditeIdx = details.indexOf("Salade")
+        val optionIdx = details.indexOf("Frites Frites Maison")
+        val blankIdx = details.indexOf("")
+        val drinkIdx = details.indexOf("Coca Cola 33 cl")
+
+        assertTrue(painIdx >= 0)
+        assertTrue(sauceIdx > painIdx)
+        assertTrue(suppIdx > sauceIdx)
+        assertTrue(cruditeIdx > suppIdx)
+        assertTrue(optionIdx > cruditeIdx)
+        assertTrue(blankIdx > optionIdx)
+        assertTrue(drinkIdx == blankIdx + 1)
+        assertTrue(text.contains("1x Kofte"))
+        assertTrue(text.contains("Coca Cola 33 cl"))
     }
 }
 

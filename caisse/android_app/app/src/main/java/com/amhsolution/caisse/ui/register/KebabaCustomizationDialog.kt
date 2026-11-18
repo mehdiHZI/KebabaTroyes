@@ -295,6 +295,28 @@ fun KebabaCustomizationDialog(
                 extra
             )
         }
+        // Oui → ligne cuisine ; Non → rien (pas de « Sans … »).
+        if (supportsAssietteSides && withBoulgour) {
+            added += SupplementSelection(
+                KebabaOptionCatalog.INCL_BOULGOUR_ID,
+                "Boulgour",
+                0
+            )
+        }
+        if (supportsAssietteSides && withAssietteFrites) {
+            added += SupplementSelection(
+                KebabaOptionCatalog.INCL_FRITES_ASSIETTE_ID,
+                "Frites",
+                0
+            )
+        }
+        if (supportsCheeseSauce && withCheeseSauce) {
+            added += SupplementSelection(
+                KebabaOptionCatalog.INCL_SAUCE_FROMAGERE_ID,
+                "Sauce fromagère",
+                0
+            )
+        }
         val removed = buildList {
             if ("sans-crudites" in cruditeIds) {
                 add(IngredientSelection("sans-crudites", "Sans les crudités"))
@@ -305,30 +327,6 @@ fun KebabaCustomizationDialog(
                         val label = KebabaOptionCatalog.crudites.first { it.id == id }.label
                         add(IngredientSelection(id, label))
                     }
-            }
-            if (supportsAssietteSides && !withBoulgour) {
-                add(
-                    IngredientSelection(
-                        KebabaOptionCatalog.SANS_BOULGOUR_ID,
-                        "Boulgour"
-                    )
-                )
-            }
-            if (supportsAssietteSides && !withAssietteFrites) {
-                add(
-                    IngredientSelection(
-                        KebabaOptionCatalog.SANS_FRITES_ASSIETTE_ID,
-                        "Frites"
-                    )
-                )
-            }
-            if (supportsCheeseSauce && !withCheeseSauce) {
-                add(
-                    IngredientSelection(
-                        KebabaOptionCatalog.SANS_SAUCE_FROMAGERE_ID,
-                        "Sauce fromagère"
-                    )
-                )
             }
         }
         val drink = when {

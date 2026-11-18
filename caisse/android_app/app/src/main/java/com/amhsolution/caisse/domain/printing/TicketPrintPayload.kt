@@ -1,5 +1,6 @@
 package com.amhsolution.caisse.domain.printing
 
+import com.amhsolution.caisse.domain.catalog.KebabaOptionCatalog
 import com.amhsolution.caisse.domain.catalog.PizzaCatalog
 import com.amhsolution.caisse.domain.catalog.ProductOptionCatalog
 import com.amhsolution.caisse.domain.catalog.SampleCatalog
@@ -422,42 +423,81 @@ private fun OrderLineSnapshot.pizzaKitchenDetails(): List<String> {
     }
 }
 
+/**
+ * Ticket cuisine Kebaba — listage positif, ordre fixe :
+ * pain → sauces → suppléments → crudités → options (boulgour/frites…) → (saut) → boisson.
+ */
 private fun OrderLineSnapshot.productKitchenDetails(): List<String> {
-    val productId = productId ?: return emptyList()
-    val product = SampleCatalog.products.firstOrNull { it.id == productId } ?: return emptyList()
-    val recipe = ProductOptionCatalog.recipeFor(productId) ?: return emptyList()
-    val customization = productCustomization
-    val removedIngredients = customization?.removedIngredients.orEmpty()
-    val removedIds = removedIngredients.map { it.id }.toSet()
-    val ingredients = recipe.ingredientIds
-        .filterNot { it in removedIds }
-        .mapNotNull { ProductOptionCatalog.ingredientFor(product.category, it)?.label }
+    val customization = productCustomization ?: return emptyList()
+    val removedIds = customization.removedIngredients.map { it.id }.toSet()
+    val sansCrudites = "sans-crudites" in removedIds
+    val recipe = productId?.let { ProductOptionCatalog.recipeFor(it) }
+    val product = productId?.let { id -> SampleCatalog.products.firstOrNull { it.id == id } }
+    val supplements = customization.addedSupplements
+
+    val pains = supplements.filter { KebabaOptionCatalog.isPainOption(it.id) }
+    val sauces = supplements.filter {
+        KebabaOptionCatalog.isSauceOption(it.id) ||
+            ProductOptionCatalog.isFritesSauce(it.id) ||
+            ProductOptionCatalog.isBurgerReplacementSauce(it.id)
+    }
+    val extras = supplements.filter {
+        KebabaOptionCatalog.isCatalogSupplement(it.id) &&
+            !KebabaOptionCatalog.isSauceOption(it.id) &&
+            !KebabaOptionCatalog.isPainOption(it.id)
+    }
+    val sideOptions = supplements.filter {
+        it.id == KebabaOptionCatalog.INCL_BOULGOUR_ID ||
+            it.id == KebabaOptionCatalog.INCL_FRITES_ASSIETTE_ID ||
+            KebabaOptionCatalog.isFritesEtapeOption(it.id) ||
+            it.id == ProductOptionCatalog.MENU_OPTION_ID
+    }
+    val other = supplements.filterNot { s ->
+        pains.any { it.id == s.id } ||
+            sauces.any { it.id == s.id } ||
+            extras.any { it.id == s.id } ||
+            sideOptions.any { it.id == s.id }
+    }
+
+    val crudites = if (!sansCrudites && recipe != null) {
+        recipe.ingredientIds
+            .filterNot { it in removedIds }
+            .mapNotNull { id ->
+                product?.let { ProductOptionCatalog.ingredientFor(it.category, id)?.label }
+                    ?: KebabaOptionCatalog.crudites.firstOrNull { it.id == id }?.label
+            }
+    } else {
+        emptyList()
+    }
+
+    val drink = customization.includedDrink?.label
 
     return buildList {
-        addAll(ingredients)
-        val supplements = customization?.addedSupplements.orEmpty()
-        val burgerReplacements = supplements.filter { ProductOptionCatalog.isBurgerReplacementSauce(it.id) }
-        val removedForKitchen = if (burgerReplacements.isNotEmpty()) {
-            removedIngredients.filterNot { ProductOptionCatalog.isBurgerRecipeSauce(it.id) }
-        } else {
-            removedIngredients
+        // 1. Pain
+        pains.forEach { add(it.label) }
+        // 2. Sauces
+        sauces.forEach { s ->
+            when {
+                ProductOptionCatalog.isBurgerReplacementSauce(s.id) ||
+                    ProductOptionCatalog.isFritesSauce(s.id) -> add("Sauce ${s.label}")
+                else -> add(s.label)
+            }
         }
-        addAll(ingredientSelectionsAsKitchenLines(removedForKitchen, "Sans"))
-        addAll(burgerReplacements.map { "Sauce ${it.label}" })
-        val menuOption = supplements.filter { it.id == ProductOptionCatalog.MENU_OPTION_ID }
-        val fritesSauces = supplements.filter { ProductOptionCatalog.isFritesSauce(it.id) }
-        val otherSupplements = supplements.filterNot {
-            it.id == ProductOptionCatalog.MENU_OPTION_ID ||
-                ProductOptionCatalog.isFritesSauce(it.id) ||
-                ProductOptionCatalog.isBurgerReplacementSauce(it.id)
+        // 3. Suppléments (+ viandes takos)
+        extras.forEach { add("Supp. ${it.label}") }
+        other.forEach { add("Supp. ${it.label}") }
+        // 4. Crudités
+        addAll(crudites)
+        // 5. Options (boulgour, frites, menu…)
+        sideOptions.forEach { s ->
+            if (s.id == ProductOptionCatalog.MENU_OPTION_ID) add("Menu") else add(s.label)
         }
-        addAll(supplementSelectionsAsKitchenLines(otherSupplements, "Supp."))
-        if (menuOption.isNotEmpty()) {
-            add("Menu")
+        customization.includedSide?.let { add(it.label) }
+        // 6. Saut de ligne puis boisson
+        if (drink != null) {
+            add("")
+            add(drink)
         }
-        customization?.includedSide?.let { add(it.label) }
-        addAll(fritesSauces.map { "Sauce ${it.label}" })
-        customization?.includedDrink?.let { add(it.label) }
     }
 }
 

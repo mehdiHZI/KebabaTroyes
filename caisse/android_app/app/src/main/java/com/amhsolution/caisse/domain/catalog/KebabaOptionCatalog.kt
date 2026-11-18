@@ -146,9 +146,34 @@ object KebabaOptionCatalog {
         KebabaOption("non", "Non")
     )
 
-    const val SANS_BOULGOUR_ID = "sans-boulgour"
-    const val SANS_FRITES_ASSIETTE_ID = "sans-frites-assiette"
-    const val SANS_SAUCE_FROMAGERE_ID = "sans-sauce-fromagere"
+    /** Inclus (Oui) → visibles cuisine ; Non → absents du ticket. */
+    const val INCL_BOULGOUR_ID = "incl-boulgour"
+    const val INCL_FRITES_ASSIETTE_ID = "incl-frites-assiette"
+    const val INCL_SAUCE_FROMAGERE_ID = "incl-sauce-fromagere"
+
+    fun isIncludedSideOption(optionId: String): Boolean =
+        optionId == INCL_BOULGOUR_ID ||
+            optionId == INCL_FRITES_ASSIETTE_ID ||
+            optionId == INCL_SAUCE_FROMAGERE_ID
+
+    fun isPainOption(optionId: String): Boolean =
+        pains.any { it.id == optionId }
+
+    fun isSauceOption(optionId: String): Boolean =
+        sauces.any { it.id == optionId } ||
+            optionId == INCL_SAUCE_FROMAGERE_ID
+
+    fun isCruditeOption(optionId: String): Boolean =
+        crudites.any { it.id == optionId && it.id != "sans-crudites" && it.id != "complet" }
+
+    fun isFritesEtapeOption(optionId: String): Boolean =
+        fritesEtape.any { it.id == optionId }
+
+    fun isTakosMeatOption(optionId: String): Boolean =
+        optionId.startsWith("takos-") || optionId.startsWith("sup-viande-")
+
+    fun isCatalogSupplement(optionId: String): Boolean =
+        supplements.any { it.id == optionId } || isTakosMeatOption(optionId)
 
     fun sauceExtraCentimes(sauceCount: Int): Int {
         val extra = (sauceCount - MAX_INCLUDED_SAUCES).coerceAtLeast(0)
