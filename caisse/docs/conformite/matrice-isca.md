@@ -11,7 +11,7 @@
 | **C** | Z définitive non écrasable | `createFinalDailyZ` + `insert` ABORT ; auto fin de journée | `CashClosureXzTest` |
 | **C** | Totaux perpétuels | `perpetual_totals` incrémentés à chaque ticket prod | Persistance Room + observe AppContainer |
 | **C** | Z mois / année sur Z jour finales | `buildMonthlyCashClosure` / `buildYearlyCashClosure` filtrés `isFinal` | `CashClosureTest` agrégats |
-| **A** Archivage | Archive fiscale figée + notice | `FiscalArchiveRepository` + `notice-archive.md` | Export JSON + journal `fiscal_archives` |
+| **A** Archivage | Archive fiscale figée + notice | `FiscalArchiveRepository` + écran **Archive** (PIN) + `notice-archive.md` | Export JSON + journal `fiscal_archives` + partage FileProvider |
 | **A** | Purge après archive seulement | `purgeProductionTicketsIfArchived` refuse sans couverture | Check métier repository |
 
 ## Données minimales ticket (BOFiP)

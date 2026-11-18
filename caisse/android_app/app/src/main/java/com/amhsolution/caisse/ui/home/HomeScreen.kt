@@ -48,7 +48,8 @@ enum class HomeDestination {
     PriceManagement,
     PrinterSettings,
     ServerSettings,
-    ClosureArchive
+    ClosureArchive,
+    FiscalArchive
 }
 
 @Composable
@@ -121,6 +122,9 @@ private fun TabletHomeLayout(
             }
             KebabaNavTile("Clôture", Modifier.weight(1f)) {
                 onActionSelected(HomeDestination.ClosureArchive)
+            }
+            KebabaNavTile("Archive", Modifier.weight(1f)) {
+                onActionSelected(HomeDestination.FiscalArchive)
             }
             KebabaNavTile("Imprimantes", Modifier.weight(1f)) {
                 onActionSelected(HomeDestination.PrinterSettings)
@@ -206,9 +210,14 @@ private fun CompactHomeLayout(
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            KebabaNavTile("Archive", Modifier.weight(1f)) {
+                onActionSelected(HomeDestination.FiscalArchive)
+            }
             KebabaNavTile("Imprimantes", Modifier.weight(1f)) {
                 onActionSelected(HomeDestination.PrinterSettings)
             }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             KebabaNavTile("Serveur", Modifier.weight(1f)) {
                 onActionSelected(HomeDestination.ServerSettings)
             }

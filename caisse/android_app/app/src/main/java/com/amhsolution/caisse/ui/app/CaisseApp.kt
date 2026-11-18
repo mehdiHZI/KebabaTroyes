@@ -55,6 +55,7 @@ import com.amhsolution.caisse.domain.printing.toCustomerTicketPrintPayload
 import com.amhsolution.caisse.domain.printing.toKitchenTicketPrintPayload
 import com.amhsolution.caisse.domain.printing.toProvisionalCustomerTicketPrintPayload
 import com.amhsolution.caisse.domain.printing.TicketPrinterOptions
+import com.amhsolution.caisse.ui.archive.FiscalArchiveScreen
 import com.amhsolution.caisse.ui.closure.ClosureArchiveScreen
 import com.amhsolution.caisse.ui.statistics.StatisticsScreen
 import com.amhsolution.caisse.ui.home.HomeDestination
@@ -110,6 +111,8 @@ fun CaisseApp() {
     val syncStatus by container.syncStatus.collectAsStateWithLifecycle()
     val serverConfig by container.serverConfigRepository.config
         .collectAsStateWithLifecycle(initialValue = ServerConfig("", "", "caisse-1"))
+    val fiscalArchives by container.fiscalArchiveRepository.observeArchives()
+        .collectAsStateWithLifecycle(initialValue = emptyList())
     val ticketSyncRepository = container.ticketSyncRepository
     val remoteOrdersRepository = container.remoteOrdersRepository
 
@@ -618,6 +621,7 @@ fun CaisseApp() {
                 onActionSelected = { destination ->
                     when (destination) {
                         HomeDestination.ClosureArchive,
+                        HomeDestination.FiscalArchive,
                         HomeDestination.ServerSettings,
                         HomeDestination.PriceManagement -> {
                             pendingPinDestination = destination
@@ -828,6 +832,53 @@ fun CaisseApp() {
                         printMessage = "Export PDF du ticket Z prêt."
                     }.onFailure { error ->
                         printMessage = error.message ?: "Le PDF du ticket Z n'a pas pu être exporté."
+                    }
+                }
+            },
+            onBack = { currentDestination = null }
+        )
+
+        HomeDestination.FiscalArchive -> FiscalArchiveScreen(
+            archives = fiscalArchives,
+            historyRecords = historyRecords,
+            onCreateArchive = { periodFrom, periodTo ->
+                runCatching {
+                    container.fiscalArchiveRepository.createArchive(
+                        records = historyRecords,
+                        periodFrom = periodFrom,
+                        periodTo = periodTo
+                    )
+                }
+            },
+            onShareArchive = { summary ->
+                scope.launch {
+                    runCatching {
+                        val file = container.fiscalArchiveRepository.absoluteFile(summary)
+                        check(file.exists()) { "Fichier archive introuvable." }
+                        val uri = FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.fileprovider",
+                            file
+                        )
+                        val exportIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "application/json"
+                            putExtra(Intent.EXTRA_STREAM, uri)
+                            putExtra(
+                                Intent.EXTRA_SUBJECT,
+                                "Archive fiscale Kebaba ${summary.periodFrom} – ${summary.periodTo}"
+                            )
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            if (context !is Activity) {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                        }
+                        context.startActivity(
+                            Intent.createChooser(exportIntent, "Partager l'archive fiscale")
+                        )
+                    }.onSuccess {
+                        printMessage = "Archive prête à partager."
+                    }.onFailure { error ->
+                        printMessage = error.message ?: "Partage de l'archive impossible."
                     }
                 }
             },

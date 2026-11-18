@@ -38,6 +38,9 @@ class FiscalArchiveRepository(
             .map { list -> list.map { it.toSummary() } }
             .flowOn(Dispatchers.Default)
 
+    fun absoluteFile(summary: FiscalArchiveSummary): File =
+        File(archiveRoot, summary.relativePath)
+
     suspend fun createArchive(
         records: List<HistoryRecord>,
         periodFrom: String,

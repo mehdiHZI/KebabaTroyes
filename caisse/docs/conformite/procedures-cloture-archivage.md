@@ -24,10 +24,11 @@ Compteurs `perpetual_totals` (CA TTC, nb tickets, nb avoirs) depuis la 1ère uti
 
 ## Archive fiscale
 
-1. Appeler `FiscalArchiveRepository.createArchive(periodFrom, periodTo)`.
-2. Fichier JSON + `archiveHash` + notice FR.
-3. Journal Room `fiscal_archives`.
-4. Purge des tickets de détail : **uniquement** si une archive couvre la période.
+1. Accueil → **Archive** (PIN responsable).
+2. Saisir période `AAAA-MM-JJ` → **Générer l'archive**.
+3. Fichier JSON sous `files/archives/fiscal/…` + `archiveHash` + notice FR ; journal Room `fiscal_archives`.
+4. **Partager** via le sélecteur Android (mail / Drive / USB…).
+5. Purge des tickets de détail : **uniquement** si une archive couvre la période (garde-fou repository).
 
 ## Accès responsable
 

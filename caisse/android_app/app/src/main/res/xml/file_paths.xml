@@ -3,4 +3,7 @@
     <files-path
         name="cash_closures"
         path="cloture/" />
+    <files-path
+        name="fiscal_archives"
+        path="archives/" />
 </paths>

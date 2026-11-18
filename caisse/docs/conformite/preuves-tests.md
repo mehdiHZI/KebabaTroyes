@@ -22,7 +22,8 @@ Exécution : depuis `caisse/android_app/`
 3. Générer rapport X puis Z ; second Z refusé.
 4. Activer badge **FACTICE** → tickets exclus sync / clôture prod.
 5. Accès clôture avec PIN (bootstrap 1er accès).
-6. Générer archive fiscale pour une période.
+6. Accueil → **Archive** (PIN) → générer une archive pour une période → **Partager** (JSON).
+7. Vérifier que les tickets FACTICE sont absents du JSON d’archive.
 
 ## Build
 

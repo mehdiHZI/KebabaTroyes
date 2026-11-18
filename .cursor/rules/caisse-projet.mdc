@@ -90,12 +90,12 @@ Repris / adaptés de `docs/fermeture_caisse.md` upstream — **bloquants** avant
 - [ ] Clôture **Z** définitive qui verrouille vraiment + corrections uniquement par avoir / contre-opération
 - [ ] Grand total période + **total perpétuel**
 - [ ] Clôtures J / M / A conformes (pas d’écrasement ambigu de Z)
-- [ ] Archive fiscale **format ouvert** + notice FR + traçabilité purge
-- [ ] Intégrité technique (chaînage / empreinte / équivalent) démontrable
-- [ ] Mode test clairement séparé (`FACTICE` / `SIMULATION`)
-- [ ] Auth / rôles (plus de mot de passe provisoire type `1234` en prod)
-- [ ] Dossier + **attestation individuelle** pour la version livrée
-- [ ] Accès / export pour contrôle administration fiscale
+- [x] Archive fiscale **format ouvert** + notice FR + UI **Archive** (PIN) + partage JSON
+- [x] Intégrité technique (chaînage / empreinte / équivalent) démontrable
+- [x] Mode test clairement séparé (`FACTICE` / `SIMULATION`)
+- [x] Auth / rôles (PIN responsable hashé — plus de `1234` en clair)
+- [ ] Dossier + **attestation individuelle** pour la version livrée (recette tablette + APK signé + signature éditeur)
+- [x] Accès / export pour contrôle administration fiscale (écran Archive)
 
 ### Checklist connexion serveur (bloquants V1 produit)
 
