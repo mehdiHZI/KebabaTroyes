@@ -86,6 +86,8 @@ fun KebabaCustomizationDialog(
     val takosMeatCount = KebabaOptionCatalog.takosRequiredMeatCount(product)
     val supportsMenu = KebabaOptionCatalog.supportsMenuToggle(product)
     val supportsDrinkPlus = KebabaOptionCatalog.supportsDrinkPlus(product)
+    val supportsAssietteSides = KebabaOptionCatalog.supportsAssietteSides(product)
+    val supportsCheeseSauce = KebabaOptionCatalog.supportsCheeseSauceToggle(product)
     val menuPrice = KebabaOptionCatalog.menuPriceCentimes(product)
     val isCategoryMenu = product.category == ProductCategory.MENUS
 
@@ -106,6 +108,11 @@ fun KebabaCustomizationDialog(
     var takosMeatIds by remember(product.id) { mutableStateOf(setOf<String>()) }
     /** Bowl / assiette : null = sans boisson ; sinon id soft +1 €. */
     var bowlDrinkId by remember(product.id) { mutableStateOf<String?>(null) }
+    /** Assiettes : inclus par défaut. */
+    var withBoulgour by remember(product.id) { mutableStateOf(true) }
+    var withAssietteFrites by remember(product.id) { mutableStateOf(true) }
+    /** Takos / Ricain : sauce fromagère inclus par défaut. */
+    var withCheeseSauce by remember(product.id) { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
 
     val showMenuFormatStep = supportsMenu && menuPrice != null
@@ -140,6 +147,9 @@ fun KebabaCustomizationDialog(
         if (showMenuFormatStep && menuPrice != null) add("Seul ou Menu")
         if (hasPain) add("Choisi ton pain")
         if (hasTakosMeats) add("Choisi tes viandes")
+        if (supportsAssietteSides) add("Boulgour")
+        if (supportsAssietteSides) add("Frites")
+        if (supportsCheeseSauce) add("Sauce fromagère")
         if (hasCrudites) add("Choisi tes garnitures")
         if (hasSupplements) add("Choisi tes suppléments")
         if (showFritesStep) add("Choisi tes frites")
@@ -285,15 +295,41 @@ fun KebabaCustomizationDialog(
                 extra
             )
         }
-        val removed = if ("sans-crudites" in cruditeIds) {
-            listOf(IngredientSelection("sans-crudites", "Sans les crudités"))
-        } else {
-            CRUDITE_INGREDIENTS
-                .filter { it !in cruditeIds }
-                .map { id ->
-                    val label = KebabaOptionCatalog.crudites.first { it.id == id }.label
-                    IngredientSelection(id, label)
-                }
+        val removed = buildList {
+            if ("sans-crudites" in cruditeIds) {
+                add(IngredientSelection("sans-crudites", "Sans les crudités"))
+            } else if (hasCrudites) {
+                CRUDITE_INGREDIENTS
+                    .filter { it !in cruditeIds }
+                    .forEach { id ->
+                        val label = KebabaOptionCatalog.crudites.first { it.id == id }.label
+                        add(IngredientSelection(id, label))
+                    }
+            }
+            if (supportsAssietteSides && !withBoulgour) {
+                add(
+                    IngredientSelection(
+                        KebabaOptionCatalog.SANS_BOULGOUR_ID,
+                        "Boulgour"
+                    )
+                )
+            }
+            if (supportsAssietteSides && !withAssietteFrites) {
+                add(
+                    IngredientSelection(
+                        KebabaOptionCatalog.SANS_FRITES_ASSIETTE_ID,
+                        "Frites"
+                    )
+                )
+            }
+            if (supportsCheeseSauce && !withCheeseSauce) {
+                add(
+                    IngredientSelection(
+                        KebabaOptionCatalog.SANS_SAUCE_FROMAGERE_ID,
+                        "Sauce fromagère"
+                    )
+                )
+            }
         }
         val drink = when {
             showMenuDrinkStep -> {
@@ -375,6 +411,54 @@ fun KebabaCustomizationDialog(
                                 options = KebabaOptionCatalog.takosMeats,
                                 selectedIds = takosMeatIds,
                                 onToggle = { toggleTakosMeat(it) }
+                            )
+                        }
+                    }
+
+                    if (supportsAssietteSides) {
+                        StepBlock(
+                            number = stepNo("Boulgour"),
+                            title = "Boulgour",
+                            hint = "Inclus par défaut"
+                        ) {
+                            OptionChips(
+                                options = KebabaOptionCatalog.yesNoOptions,
+                                selectedIds = setOf(if (withBoulgour) "oui" else "non"),
+                                onToggle = { id ->
+                                    error = null
+                                    withBoulgour = id == "oui"
+                                }
+                            )
+                        }
+                        StepBlock(
+                            number = stepNo("Frites"),
+                            title = "Frites",
+                            hint = "Incluses par défaut"
+                        ) {
+                            OptionChips(
+                                options = KebabaOptionCatalog.yesNoOptions,
+                                selectedIds = setOf(if (withAssietteFrites) "oui" else "non"),
+                                onToggle = { id ->
+                                    error = null
+                                    withAssietteFrites = id == "oui"
+                                }
+                            )
+                        }
+                    }
+
+                    if (supportsCheeseSauce) {
+                        StepBlock(
+                            number = stepNo("Sauce fromagère"),
+                            title = "Sauce fromagère",
+                            hint = "Incluse par défaut"
+                        ) {
+                            OptionChips(
+                                options = KebabaOptionCatalog.yesNoOptions,
+                                selectedIds = setOf(if (withCheeseSauce) "oui" else "non"),
+                                onToggle = { id ->
+                                    error = null
+                                    withCheeseSauce = id == "oui"
+                                }
                             )
                         }
                     }

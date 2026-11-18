@@ -85,6 +85,13 @@ Pain frais de Momo **ou** dürüm. Ancien id `speciaux` → **`kreations`**.
 
 Pain frais, boulgour maison, frites, crudités. Upsell boisson **+1,00 €**.
 
+Personnalisation caisse (défaut **Oui**) :
+
+| Étape | Choix | Si Non |
+|-------|-------|--------|
+| Boulgour | Oui / Non | `sans-boulgour` dans `removedIngredients` |
+| Frites | Oui / Non | `sans-frites-assiette` dans `removedIngredients` |
+
 | Article | Prix TTC | Centimes | `productId` |
 |---------|----------|----------|-------------|
 | Assiette Klassik | 15,00 € | 1500 | `assiette-klassik` |
@@ -112,6 +119,8 @@ Upsell boisson **+1,00 €**.
 
 Viandes au choix : kebab, poulet mariné, steak, nuggets, tenders, cordon bleu, falafel.  
 Menu = prix seul **+3,00 €**.
+
+Personnalisation caisse : **Sauce fromagère** Oui / Non (défaut **Oui**) → si Non : `sans-sauce-fromagere` dans `removedIngredients`. Même toggle pour le 'Dwich **Ricain** (`ricain`).
 
 | Article | Seul | Menu | Centimes | `productId` |
 |---------|------|------|----------|-------------|
@@ -284,6 +293,14 @@ Upsell popup V1 : Feta · Boursin · Cheddar Maison · Frites Cheddar Bacon (`fr
 | Option | Prix | Centimes | `optionId` | Usage |
 |--------|------|----------|------------|-------|
 | Boisson (avec bowl / assiette) | +1,00 € | 100 | `boisson-plus` | Upsell plat |
+
+### Toggles inclus (défaut Oui) — caisse
+
+| Produits | Question | Si Non (`removedIngredients`) |
+|----------|----------|-------------------------------|
+| Assiettes | Boulgour ? | `sans-boulgour` |
+| Assiettes | Frites ? | `sans-frites-assiette` |
+| Takos + Ricain (`ricain`) | Sauce fromagère ? | `sans-sauce-fromagere` |
 
 ## Identifiants techniques (convention)
 

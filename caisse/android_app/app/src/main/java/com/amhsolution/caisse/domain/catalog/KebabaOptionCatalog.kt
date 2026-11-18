@@ -1,6 +1,7 @@
 package com.amhsolution.caisse.domain.catalog
 
 import com.amhsolution.caisse.domain.model.Product
+import com.amhsolution.caisse.domain.model.ProductCategory
 
 data class KebabaOption(
     val id: String,
@@ -131,6 +132,23 @@ object KebabaOptionCatalog {
     fun menuPriceCentimes(product: Product): Int? = product.menuPriceCentimes
 
     fun supportsDrinkPlus(product: Product): Boolean = product.supportsDrinkPlus
+
+    /** Assiettes : boulgour et frites inclus par défaut (oui/non). */
+    fun supportsAssietteSides(product: Product): Boolean =
+        product.category == ProductCategory.ASSIETTES
+
+    /** Takos + Ricain ('Dwich) : sauce fromagère inclus par défaut (oui/non). */
+    fun supportsCheeseSauceToggle(product: Product): Boolean =
+        product.hasTakosMeats || product.id == "ricain"
+
+    val yesNoOptions: List<KebabaOption> = listOf(
+        KebabaOption("oui", "Oui"),
+        KebabaOption("non", "Non")
+    )
+
+    const val SANS_BOULGOUR_ID = "sans-boulgour"
+    const val SANS_FRITES_ASSIETTE_ID = "sans-frites-assiette"
+    const val SANS_SAUCE_FROMAGERE_ID = "sans-sauce-fromagere"
 
     fun sauceExtraCentimes(sauceCount: Int): Int {
         val extra = (sauceCount - MAX_INCLUDED_SAUCES).coerceAtLeast(0)
